@@ -1,4 +1,4 @@
-#include "SPI.h"
+#include "SPI.hpp"
 #include <iostream>
 
 
