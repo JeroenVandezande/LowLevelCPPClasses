@@ -15,7 +15,7 @@ namespace LowLevelEmbedded
 	class IPIO
 	{
 	 protected:
-		T _Shadow;
+		T _shadow;
 	 public:
 		virtual ~IPIO()
 		{
