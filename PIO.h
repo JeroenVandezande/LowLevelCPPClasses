@@ -21,6 +21,9 @@ namespace LowLevelEmbedded
 		{
 		};
 		/// Writes data to the PIO
+		/// \param direction The direction of the port pins, a 1 is an input pin and a 0 is an output pin
+		virtual void SetPortDirection(T direction) = 0;
+		/// Writes data to the PIO
 		/// \param data The data you want to output
 		virtual void WritePort(T data);
 		/// Reads data from the PIO
