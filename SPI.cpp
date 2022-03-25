@@ -1,4 +1,8 @@
-#include "SPI.hpp"
-#include <iostream>
+#include "SPI.h"
+
+namespace LowLevelEmbedded
+{
+
+}
 
 
