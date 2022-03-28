@@ -7,9 +7,9 @@
 
 namespace LowLevelEmbedded
 {
-	enum SPI_Mode_t
+	enum class SPIMode
 	{
-		spmUndefined, spmMode0, spmMode1, spmMode2, spmMode3
+		Undefined, Mode0, Mode1, Mode2, Mode3
 	};
 
 	class ISPIAccess
@@ -18,7 +18,8 @@ namespace LowLevelEmbedded
 		virtual ~ISPIAccess()
 		{
 		};
-		virtual void ReadWriteSPI(uint8_t* data, size_t length, uint8_t cs_ID, enum SPI_Mode_t mode) = 0;
+		virtual void ReadWriteSPI(uint8_t* data, size_t length, uint8_t cs_ID, enum SPIMode mode) = 0;
+		virtual void WriteThenReadSPI(uint8_t* writedata, size_t writelength, uint8_t* readdata, size_t readlength, uint8_t cs_ID, enum SPIMode mode) = 0;
 	};
 }
 
