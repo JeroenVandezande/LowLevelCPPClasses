@@ -24,7 +24,7 @@ namespace LowLevelEmbedded
 			{
 				uint8_t buffer[3] = { static_cast<uint8_t>(this->_address & 0b11111110), static_cast<uint8_t>(Registers::GPIO), data };
 				this->SPIAccess->ReadWriteSPI(&buffer[0], 3, this->_csID, SPIMode::Mode0);
-				IPIO<uint8_t>::WritePort(data);
+				this->_shadow = data;
 			}
 
 			uint8_t MCP23S08::ReadPort()
