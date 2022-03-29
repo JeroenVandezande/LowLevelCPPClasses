@@ -7,12 +7,6 @@
 namespace LowLevelEmbedded
 {
 	template <class T>
-	void IPIO<T>::WritePort(T data)
-	{
-		this->_shadow = data;
-	}
-
-	template <class T>
 	void IPIO<T>::SetBit(uint8_t bitNumber)
 	{
 		T modifiedPort = this->_shadow | 1UL << bitNumber;

@@ -25,7 +25,7 @@ namespace LowLevelEmbedded
 		virtual void SetPortDirection(T direction) = 0;
 		/// Writes data to the PIO
 		/// \param data The data you want to output
-		virtual void WritePort(T data);
+		virtual void WritePort(T data) = 0;
 		/// Reads data from the PIO
 		/// \return the Byte read from the PIO
 		virtual T ReadPort() = 0;
