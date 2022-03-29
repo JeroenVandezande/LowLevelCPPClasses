@@ -6,28 +6,33 @@
 
 namespace LowLevelEmbedded
 {
-	template <class T>
-	void IPIO<T>::SetBit(uint8_t bitNumber)
+
+	void IPIO_8::SetBit(uint8_t bitNumber)
 	{
-		T modifiedPort = this->_shadow | 1UL << bitNumber;
+		uint8_t modifiedPort = this->_shadow | 1UL << bitNumber;
 		this->WritePort(modifiedPort);
 		this->_shadow = modifiedPort;
 	}
 
-	template <class T>
-	void IPIO<T>::ClearBit(uint8_t bitNumber)
+
+	void IPIO_8::ClearBit(uint8_t bitNumber)
 	{
-		T modifiedPort = this->_shadow & ~(1UL << bitNumber);
+		uint8_t modifiedPort = this->_shadow & ~(1UL << bitNumber);
 		this->WritePort(modifiedPort);
 		this->_shadow = modifiedPort;
 	}
 
-	template <class T>
-	void IPIO<T>::ToggleBit(uint8_t bitNumber)
+
+	void IPIO_8::ToggleBit(uint8_t bitNumber)
 	{
-		T modifiedPort = this->_shadow ^ 1UL << bitNumber;
+		uint8_t modifiedPort = this->_shadow ^ 1UL << bitNumber;
 		this->WritePort(modifiedPort);
 		this->_shadow = modifiedPort;
+	}
+
+	bool IPIO_8::GetBit(uint8_t bitNumber)
+	{
+		return (this->ReadPort() & (1UL << bitNumber)) != 0;
 	}
 
 }

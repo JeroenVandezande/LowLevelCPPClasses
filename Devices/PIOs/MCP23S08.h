@@ -12,7 +12,7 @@ namespace LowLevelEmbedded
 		{
 			/// a Class that represents the MCP23S08 8-bit SPI PIO from Microchip.
 			/// see <href https://www.microchip.com/en-us/product/MCP23S08> for more info
-			class MCP23S08 : public IPIO<uint8_t>
+			class MCP23S08 : public IPIO_8
 			{
 				const uint8_t BASEADDRESS = 0b01000000;
 				uint8_t _address;

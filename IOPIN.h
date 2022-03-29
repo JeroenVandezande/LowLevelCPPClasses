@@ -9,14 +9,13 @@
 
 namespace LowLevelEmbedded
 {
-	template <class T>
 	class IOPIN
 	{
 	 private:
-		IPIO<T> * pio;
+		IPIO * pio;
 		uint8_t pin;
 	public:
-		IOPIN(IPIO<T> * pio, uint8_t pin)
+		IOPIN(IPIO* pio, uint8_t pin)
 		{
 			this->pio = pio;
 			this->pin = pin;
@@ -26,9 +25,6 @@ namespace LowLevelEmbedded
 		void Clear();
 		bool GetValue();
 		void Toggle();
-
-		explicit operator bool();
-		IOPIN& operator = (bool value);
 	};
 }
 #endif //_IOPIN_H_
