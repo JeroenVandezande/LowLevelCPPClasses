@@ -11,11 +11,20 @@ namespace LowLevelEmbedded
 {
 	class IOPIN
 	{
+	public:
+		virtual void Set() = 0;
+		virtual void Clear() = 0;
+		virtual bool GetValue() = 0;
+		virtual void Toggle() = 0;
+	};
+
+	class IOPIN_PIO8 : public IOPIN
+	{
 	 private:
 		IPIO * pio;
 		uint8_t pin;
-	public:
-		IOPIN(IPIO* pio, uint8_t pin)
+	 public:
+		IOPIN_PIO8(IPIO* pio, uint8_t pin)
 		{
 			this->pio = pio;
 			this->pin = pin;
