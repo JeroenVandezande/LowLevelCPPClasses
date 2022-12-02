@@ -9,6 +9,8 @@
 
 namespace LowLevelEmbedded
 {
+	class IOPIN;
+
 	/// Generic Base class to use for all PIOs
 	class IPIO
 	{
@@ -28,6 +30,9 @@ namespace LowLevelEmbedded
 		/// Reads the value of the input port
 		/// \param bitNumber a zero based index of the bit number on the port
 		virtual bool GetBit(uint8_t bitNumber) = 0;
+		/// Creates a new instance of a Pin Object related to this PIO
+		/// \param bitNumber a zero based index of the bit number on the port
+		virtual IOPIN* CreateIOPin(uint8_t bitNumber) = 0;
 	};
 
 	/// Generic Base class to use for all PIOs
@@ -60,6 +65,9 @@ namespace LowLevelEmbedded
 		/// Reads the value of the input port
 		/// \param bitNumber a zero based index of the bit number on the port
 		bool GetBit(uint8_t bitNumber) override;
+		/// Creates a new instance of a Pin Object related to this PIO
+		/// \param bitNumber a zero based index of the bit number on the port
+		IOPIN* CreateIOPin(uint8_t bitNumber) override;
 	};
 }
 

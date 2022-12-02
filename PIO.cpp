@@ -3,6 +3,7 @@
 //
 
 #include "PIO.h"
+#include "IOPIN.h"
 
 namespace LowLevelEmbedded
 {
@@ -33,6 +34,11 @@ namespace LowLevelEmbedded
 	bool IPIO_8::GetBit(uint8_t bitNumber)
 	{
 		return (this->ReadPort() & (1UL << bitNumber)) != 0;
+	}
+
+	IOPIN* IPIO_8::CreateIOPin(uint8_t bitNumber)
+	{
+		return new IOPIN_PIO8(this, bitNumber);
 	}
 
 }

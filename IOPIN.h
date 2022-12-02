@@ -21,7 +21,7 @@ namespace LowLevelEmbedded
 	class IOPIN_PIO8 : public IOPIN
 	{
 	 private:
-		IPIO * pio;
+		IPIO* pio;
 		uint8_t pin;
 	 public:
 		IOPIN_PIO8(IPIO* pio, uint8_t pin)
