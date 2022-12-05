@@ -143,6 +143,8 @@ namespace LowLevelEmbedded
 
 				uint8_t _SlaveAddress;
 
+				bool writeToRegister(uint8_t reg, uint8_t data);
+
 				//shadow registers
 				uint8_t _FanConfigurationRegisters[6];
 				uint8_t _FanDynamicsRegisters[6];

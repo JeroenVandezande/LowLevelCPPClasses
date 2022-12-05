@@ -30,6 +30,12 @@ namespace LowLevelEmbedded
 				}
 			}
 
+			bool MAX31790::writeToRegister(uint8_t reg, uint8_t data)
+			{
+				uint8_t tempBuffer[2] = {reg, data};
+				return _I2CAccess->I2C_WriteMethod(_SlaveAddress, &tempBuffer[0], 2);
+			}
+
 			bool MAX31790::setFanMode(uint8_t fanID, MAX31790_FanMode fanmode)
 			{
 				switch (fanmode)
@@ -41,14 +47,12 @@ namespace LowLevelEmbedded
 						SET_BIT(_FanConfigurationRegisters[fanID], FC_RPM_MODE_SHIFT);
 						break;
 				}
-				uint8_t tempBuffer[2] = {(uint8_t)(FAN1_CONFIGURATION_ADDRESS + fanID), _FanConfigurationRegisters[fanID]};
-				return _I2CAccess->I2C_WriteMethod(_SlaveAddress, &tempBuffer[0], 2);
+				return writeToRegister(FAN1_CONFIGURATION_ADDRESS + fanID, _FanConfigurationRegisters[fanID]);
 			}
 
 			bool MAX31790::setFanSpeedRange(uint8_t fanID, uint8_t speedRange)
 			{
-				uint8_t tempBuffer[2] = {(uint8_t)(FAN1_DYNAMICS_ADDRESS + fanID), _FanConfigurationRegisters[fanID]};
-
+				return writeToRegister(FAN1_DYNAMICS_ADDRESS + fanID, _FanConfigurationRegisters[fanID]);
 			}
 
 		}
