@@ -6,13 +6,16 @@
 #define _MAX31790_H_
 
 #include <stdint.h>
+#include "I2C.h"
 
 namespace LowLevelEmbedded
 {
 	namespace Devices
 	{
-		namespace PIOs
+		namespace FanControllers
 		{
+			enum class MAX31790_FanMode{PWMMode, RPMMode};
+
 			class MAX31790
 			{
 			 private:
@@ -85,6 +88,8 @@ namespace LowLevelEmbedded
 				const uint8_t TACH11_COUNT_LSB_ADDRESS = 0x2D;
 				const uint8_t TACH12_COUNT_MSB_ADDRESS = 0x2E;
 				const uint8_t TACH12_COUNT_LSB_ADDRESS = 0x2F;
+				const uint8_t TACH_COUNT_SHIFT = 5;
+
 				const uint8_t PWMOUT1_DUTYCYCLE_MSB_ADDRESS = 0x30;
 				const uint8_t PWMOUT1_DUTYCYCLE_LSB_ADDRESS = 0x31;
 				const uint8_t PWMOUT2_DUTYCYCLE_MSB_ADDRESS = 0x32;
@@ -97,6 +102,8 @@ namespace LowLevelEmbedded
 				const uint8_t PWMOUT5_DUTYCYCLE_LSB_ADDRESS = 0x39;
 				const uint8_t PWMOUT6_DUTYCYCLE_MSB_ADDRESS = 0x3A;
 				const uint8_t PWMOUT6_DUTYCYCLE_LSB_ADDRESS = 0x3B;
+				const uint8_t PWMOUT_DUTYCYCLE_SHIFT = 5;
+
 				const uint8_t PWMOUT1_TARGET_DUTYCYCLE_MSB_ADDRESS = 0x40;
 				const uint8_t PWMOUT1_TARGET_DUTYCYCLE_LSB_ADDRESS = 0x41;
 				const uint8_t PWMOUT2_TARGET_DUTYCYCLE_MSB_ADDRESS = 0x42;
@@ -109,6 +116,8 @@ namespace LowLevelEmbedded
 				const uint8_t PWMOUT5_TARGET_DUTYCYCLE_LSB_ADDRESS = 0x49;
 				const uint8_t PWMOUT6_TARGET_DUTYCYCLE_MSB_ADDRESS = 0x4A;
 				const uint8_t PWMOUT6_TARGET_DUTYCYCLE_LSB_ADDRESS = 0x4B;
+				const uint8_t PWMOUT_TARGET_DUTYCYCLE_SHIFT = 7;
+
 				const uint8_t TACH1_TARGET_COUNT_MSB_ADDRESS = 0x50;
 				const uint8_t TACH1_TARGET_COUNT_LSB_ADDRESS = 0x51;
 				const uint8_t TACH2_TARGET_COUNT_MSB_ADDRESS = 0x52;
@@ -121,12 +130,48 @@ namespace LowLevelEmbedded
 				const uint8_t TACH5_TARGET_COUNT_LSB_ADDRESS = 0x59;
 				const uint8_t TACH6_TARGET_COUNT_MSB_ADDRESS = 0x5A;
 				const uint8_t TACH6_TARGET_COUNT_LSB_ADDRESS = 0x5B;
+				const uint8_t TACH_TARGET_COUNT_SHIFT = 5;
+
 				const uint8_t WINDOW1_MSB_ADDRESS = 0x60;
 				const uint8_t WINDOW2_MSB_ADDRESS = 0x61;
 				const uint8_t WINDOW3_MSB_ADDRESS = 0x62;
 				const uint8_t WINDOW4_MSB_ADDRESS = 0x63;
 				const uint8_t WINDOW5_MSB_ADDRESS = 0x64;
 				const uint8_t WINDOW6_MSB_ADDRESS = 0x65;
+
+				II2CAccess *_I2CAccess;
+
+				uint8_t _SlaveAddress;
+
+				//shadow registers
+				uint8_t _FanConfigurationRegisters[6];
+				uint8_t _FanDynamicsRegisters[6];
+
+			 public:
+				/// The constructor of the Fan Controller
+				/// \param i2cAccess a Pointer to a II2CAccess implementation
+				/// \param slaveAddres the 7 bit slave address of the device
+				MAX31790(II2CAccess *i2cAccess, uint8_t slaveAddres);
+
+				///
+				/// \param fanID the zero based fan ID (0..5)
+				/// \param fanmode the mode the controller operates in.
+				/// \return true if no errors occurred.
+				bool setFanMode(uint8_t fanID, MAX31790_FanMode fanmode);
+
+				/// The device determines fan speed by counting the number of internal 8192Hz (fTOSC/4) clock cycles (using an 11-bit counter) during one or more fan tachometer periods.
+				/// Three bits set the nominal RPM range for the fan, as shown in the table below.
+				/// For example, a setting of 010b causes the device to count the number of 8192Hz (fTOSC/4) clock cycles that occur during four complete tachometer periods.
+				/// If the fan has a nominal speed of 2000 RPM and two tachometer pulses per revolution, one tachometer period is nominally 15ms, and four tachometer periods are 60ms.
+				/// With an 8192Hz (fTOSC/4) clock, the TACH count is therefore equal to 491. With a fan speed of 1/3 the nominal value, the count is 1474.
+				/// If the fan’s nominal speed is 1000 RPM, the full-speed TACH count is 983.
+				/// At 1/3 the nominal speed, there are 2948 clock cycles in four tachometer periods.
+				/// This is greater than the maximum 11-bit count of 2047, so four tachometer periods is too many for this fan; a setting of 001 (two clock cycles) is recommended instead.
+				/// \param fanID the zero based fan ID (0..5)
+				/// \param speedRange 3-bit speed-range
+				/// \return true if no errors occurred.
+				bool setFanSpeedRange(uint8_t fanID, uint8_t speedRange);
+
 			};
 		}
 	}
