@@ -52,6 +52,14 @@ namespace LowLevelEmbedded
 
 			bool MAX31790::setFanSpeedRange(uint8_t fanID, uint8_t speedRange)
 			{
+				_FanConfigurationRegisters[fanID] = (_FanConfigurationRegisters[fanID] & 0b00011111) | (speedRange << 5);
+				return writeToRegister(FAN1_DYNAMICS_ADDRESS + fanID, _FanConfigurationRegisters[fanID]);
+			}
+
+			bool MAX31790::setFanRateOfChange(uint8_t fanID, MAX31790_RateOfChange rateOfChange)
+			{
+				uint8_t rot = (u_int8_t)rateOfChange;
+				_FanConfigurationRegisters[fanID] = (_FanConfigurationRegisters[fanID] & 0b11100011) | (rot << 2);
 				return writeToRegister(FAN1_DYNAMICS_ADDRESS + fanID, _FanConfigurationRegisters[fanID]);
 			}
 

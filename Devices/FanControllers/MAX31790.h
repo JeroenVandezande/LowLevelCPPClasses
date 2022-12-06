@@ -16,6 +16,8 @@ namespace LowLevelEmbedded
 		{
 			enum class MAX31790_FanMode{PWMMode, RPMMode};
 
+			enum class MAX31790_RateOfChange{Two_ms, Four_ms, Eight_ms, Fifteen_ms, ThirtyOne_ms, SixtyTwo_ms, HundredAndTwentyFive_ms};
+
 			class MAX31790
 			{
 			 private:
@@ -173,6 +175,21 @@ namespace LowLevelEmbedded
 				/// \param speedRange 3-bit speed-range
 				/// \return true if no errors occurred.
 				bool setFanSpeedRange(uint8_t fanID, uint8_t speedRange);
+
+				/// PWM duty cycle rate of change.
+				/// The rate-of-change bits determine the time interval between duty cycle output increments/decrements.
+				/// Regardless of the settings, there are a few cases for which the rate-of-change is always 0:
+				/// In RPM mode, when a TACH target count of 2047 (7FFh) is selected, the duty cycle immediately goes to 0%. A full-scale target count is assumed to mean that the intent is to shut down the fan, and going directly to 0% avoids the possibility of loss of control-loop feedback at high TACH counts.
+				/// If a slow-speed decrease toward 0% is desired, select a TACH target count at the slowest practical value for the fan. Once that count has been reached, selecting a count of 2047 (7FF) then takes the drive immediately to 0%.
+				/// In PWM mode, when a target duty cycle of 0% is selected, the duty cycle goes to 0%. Again, it is assumed that the intent is to shut down the fan. If a slow-speed decrease toward 0% is desired, a target duty cycle of the slowest practical value for the fan in question should be chosen.
+				/// Once that duty cycle has been reached, selecting a target value of 0% then takes the drive immediately to 0%.
+				/// When the current duty cycle is 0% in PWM mode, selecting a new target duty cycle immediately takes the duty cycle to that value.
+				/// The fan spins up first if spin-up is enabled.
+				/// When the current duty cycle is 0% in RPM mode, selecting a new TACH target count that is less than 2047 (7FFh) immediately takes the duty cycle to the value in the PWMOUT Target Duty Cycle register. From this value, the duty cycle increments as needed to achieve the desired TACH target count. The fan spins up first if spin-up is enabled.
+				/// \param fanID the zero based fan ID (0..5)
+				/// \param rateOfChange The time between duty cycle increments
+				/// \return true if no errors occurred.
+				bool setFanRateOfChange(uint8_t fanID, MAX31790_RateOfChange rateOfChange);
 
 			};
 		}
