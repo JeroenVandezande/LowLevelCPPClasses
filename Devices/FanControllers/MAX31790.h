@@ -18,6 +18,8 @@ namespace LowLevelEmbedded
 
 			enum class MAX31790_RateOfChange{Two_ms, Four_ms, Eight_ms, Fifteen_ms, ThirtyOne_ms, SixtyTwo_ms, HundredAndTwentyFive_ms};
 
+			enum class MAX31790_NumberOfTachPeriods{four = 0b010, one = 0b000, two = 0b001, eight = 0b011, sixteen = 0b100, thirtyTwo = 0b111 };
+
 			class MAX31790
 			{
 			 private:
@@ -144,8 +146,11 @@ namespace LowLevelEmbedded
 				II2CAccess *_I2CAccess;
 
 				uint8_t _SlaveAddress;
+				uint8_t _NumberOfTachoPulsesPerRevolution[6];
 
-				bool writeToRegister(uint8_t reg, uint8_t data);
+				bool _writeToRegister(uint8_t reg, uint8_t data);
+				uint8_t _readFromRegister(uint8_t reg);
+				uint16_t _getFanSpeedRange(uint8_t fanID) const;
 
 				//shadow registers
 				uint8_t _FanConfigurationRegisters[6];
@@ -172,9 +177,9 @@ namespace LowLevelEmbedded
 				/// At 1/3 the nominal speed, there are 2948 clock cycles in four tachometer periods.
 				/// This is greater than the maximum 11-bit count of 2047, so four tachometer periods is too many for this fan; a setting of 001 (two clock cycles) is recommended instead.
 				/// \param fanID the zero based fan ID (0..5)
-				/// \param speedRange 3-bit speed-range
+				/// \param numberOfTachPeriodsCounted a value between 1 and 32
 				/// \return true if no errors occurred.
-				bool setFanSpeedRange(uint8_t fanID, uint8_t speedRange);
+				bool setFanSpeedRange(uint8_t fanID, MAX31790_NumberOfTachPeriods numberOfTachPeriodsCounted);
 
 				/// PWM duty cycle rate of change.
 				/// The rate-of-change bits determine the time interval between duty cycle output increments/decrements.
@@ -191,6 +196,16 @@ namespace LowLevelEmbedded
 				/// \return true if no errors occurred.
 				bool setFanRateOfChange(uint8_t fanID, MAX31790_RateOfChange rateOfChange);
 
+				/// Sets the target speed of a fan.
+				/// \param fanID the zero based fan ID (0..5)
+				/// \param targetCount speed of the fan in rpm
+				/// \return true if no errors occurred.
+				bool setFanTargetRPM(uint8_t fanID, uint16_t rpm);
+
+				/// Get the actual speed of the fan.
+				/// \param fanID the zero based fan ID (0..5)
+				/// \return The fan speed in rpm.
+				uint16_t getFanRPM(uint8_t fanID);
 			};
 		}
 	}
