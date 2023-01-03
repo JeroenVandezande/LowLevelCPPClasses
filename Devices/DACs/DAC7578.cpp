@@ -21,7 +21,7 @@ namespace LowLevelEmbedded
 
 			bool DAC7578::InitDAC()
 			{
-
+				return true;
 			}
 
 			bool DAC7578::WriteDAC(uint8_t channel, uint16_t value)
