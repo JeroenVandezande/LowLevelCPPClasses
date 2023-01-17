@@ -12,7 +12,6 @@ namespace LowLevelEmbedded
 	{
 		namespace FanControllers
 		{
-
 			//Constructor
 			MAX31790::MAX31790(II2CAccess *i2cAccess, uint8_t slaveAddres)
 			{
@@ -21,6 +20,8 @@ namespace LowLevelEmbedded
 				//read shadow registers from device
 				for (int i = 0; i < 6; ++i)
 				{
+					_NumberOfTachoPulsesPerRevolution[i] = 2;
+
 					uint8_t tempBuffer = FAN1_CONFIGURATION_ADDRESS + i;
 					_I2CAccess->I2C_WriteMethod(_SlaveAddress, &tempBuffer, 1); //set address in device for next read
 					_I2CAccess->I2C_ReadMethod(_SlaveAddress, &_FanConfigurationRegisters[i], 1);
@@ -59,6 +60,11 @@ namespace LowLevelEmbedded
 				return _writeToRegister(FAN1_CONFIGURATION_ADDRESS + fanID, _FanConfigurationRegisters[fanID]);
 			}
 
+			void  MAX31790::setFanPulsesPerRevolution(uint8_t fanID, uint8_t numberOfPulsesPerRevolution)
+			{
+				_NumberOfTachoPulsesPerRevolution[fanID] = numberOfPulsesPerRevolution;
+			}
+
 			bool MAX31790::setFanSpeedRange(uint8_t fanID, MAX31790_NumberOfTachPeriods numberOfTachPeriodsCounted)
 			{
 				uint8_t speedRange = (uint32_t)numberOfTachPeriodsCounted;
@@ -79,10 +85,26 @@ namespace LowLevelEmbedded
 
 				float speedAsFloat = (60.0 / (_NumberOfTachoPulsesPerRevolution[fanID] * rpm)) * SR * 8192;
 				uint16_t speedAsInt = round(speedAsFloat);
-				uint8_t lowerByte = (uint8_t) speedAsInt;
-				uint8_t higherByte = (uint8_t) (speedAsInt >> 8);
-				if(!_writeToRegister(TACH1_TARGET_COUNT_LSB_ADDRESS + fanID, lowerByte)) return false;
-				return _writeToRegister(TACH1_TARGET_COUNT_MSB_ADDRESS + fanID, higherByte);
+				if(speedAsInt > 2047) speedAsInt = 2047;
+				uint8_t lowerByte = (uint8_t) (speedAsInt << 5);
+				uint8_t higherByte = (uint8_t) (speedAsInt >> 3);
+				if(!_writeToRegister(TACH1_TARGET_COUNT_MSB_ADDRESS + (fanID * 2), higherByte)) return false;
+				if(!_writeToRegister(TACH1_TARGET_COUNT_LSB_ADDRESS + (fanID * 2), lowerByte)) return false;
+				return true;
+			}
+
+			bool MAX31790::setFanTargetPWM(uint8_t fanID, float pwm)
+			{
+				uint16_t pwmAsInt = round(pwm * 511);
+				uint8_t lowerByte = (uint8_t) (pwmAsInt << 7);
+				uint8_t higherByte = (uint8_t) (pwmAsInt >> 1);
+				if(!_writeToRegister(PWMOUT1_TARGET_DUTYCYCLE_MSB_ADDRESS + (fanID * 2), higherByte)) return false;
+				return _writeToRegister(PWMOUT1_TARGET_DUTYCYCLE_LSB_ADDRESS + (fanID * 2), lowerByte);
+			}
+
+			bool MAX31790::setFanWindow(uint8_t fanID, uint8_t window)
+			{
+				return _writeToRegister(WINDOW1_MSB_ADDRESS + fanID, window);
 			}
 
 			uint16_t MAX31790::_getFanSpeedRange(uint8_t fanID) const
@@ -117,8 +139,8 @@ namespace LowLevelEmbedded
 			uint16_t MAX31790::getFanRPM(uint8_t fanID)
 			{
 				uint16_t SR = _getFanSpeedRange(fanID);
-				uint8_t TC_LSB = _readFromRegister(TACH1_COUNT_LSB_ADDRESS + fanID);
-				uint8_t TC_MSB = _readFromRegister(TACH1_COUNT_MSB_ADDRESS + fanID);
+				uint16_t TC_MSB = _readFromRegister(TACH1_COUNT_MSB_ADDRESS + (fanID * 2));
+				uint16_t TC_LSB = _readFromRegister(TACH1_COUNT_LSB_ADDRESS + (fanID * 2));
 				uint16_t TC = (TC_LSB >> 5) | (TC_MSB << 3);
 				float rpmAsFloat = (60 * SR * 8192) / (TC * _NumberOfTachoPulsesPerRevolution[fanID]);
 				return round(rpmAsFloat);

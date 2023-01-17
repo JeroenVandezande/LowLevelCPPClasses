@@ -18,6 +18,7 @@ namespace LowLevelEmbedded
 		virtual ~ISPIAccess()
 		{
 		};
+		virtual void WriteSPI(uint8_t* data, size_t length, uint8_t cs_ID, enum SPIMode mode) = 0;
 		virtual void ReadWriteSPI(uint8_t* data, size_t length, uint8_t cs_ID, enum SPIMode mode) = 0;
 		virtual void WriteThenReadSPI(uint8_t* writedata, size_t writelength, uint8_t* readdata, size_t readlength, uint8_t cs_ID, enum SPIMode mode) = 0;
 	};

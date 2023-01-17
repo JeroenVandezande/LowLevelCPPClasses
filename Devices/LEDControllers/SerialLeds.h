@@ -6,6 +6,8 @@
 #define _SERIALLEDS_H_
 
 #include <stdint.h>
+#include <stddef.h>
+#include "SPI.h"
 
 namespace LowLevelEmbedded
 {
@@ -13,25 +15,38 @@ namespace LowLevelEmbedded
 	{
 		namespace LedControllers
 		{
-			enum SerialLeds_Colors
-			{
-				Red = 0x00FF00,
-				Green = 0xFF0000,
-				Blue = 0x0000FF
-			};
-
-			class SerialLeds
+			class SerialLED
 			{
 			 private:
-				const int LED_BYTE_SIZE = 24;
-				const int LED_RESET_PULSE = 10;
-				const uint8_t LOGIC_LED_0 = 0xC0;
-				const uint8_t LOGIC_LED_1 = 0xF0;
+				size_t _bufferSize;
+				uint8_t* _buffer;
+				uint16_t _numberOfLeds;
+				LowLevelEmbedded::ISPIAccess* _spiAccess;
+				void ClearLEDBuffer();
+				void FillBufferForLED(uint16_t index, uint8_t color[3]);
 			 public:
-				SerialLeds(uint16_t amountOfLeds)
-				{
+				/// constructor
+				SerialLED(LowLevelEmbedded::ISPIAccess* spiAccess, uint16_t amountOfLeds);
 
-				}
+				/// Turns off all LEDs in the string and resets the byte buffer
+				void TurnOffAll();
+
+				/// Sets all of the LEDs to a certain color and writes the buffer to SPI
+				/// \param color 24 bit uint for representing color (GRB)
+				void SetAndWriteAllToColor(uint8_t color[3]);
+
+				/// Sets a particular LED to a certain color and writes the entire buffer to SPI (SLOW)
+				/// \param index The index of the LED in the chain
+				/// \param color 24 bit uint for representing color (GRB)
+				void SetAndWriteLED(uint16_t index, uint8_t color[3]);
+
+				/// Sets a particular LED to a certain color without writing to SPI. Use with WriteBufferToSPI
+				/// \param index The index of the LED in the chain
+				/// \param color 24 bit uint for representing color (GRB)
+				void SetLED(uint16_t index, uint8_t color[3]);
+
+				/// Writes the buffer to SPI
+				void WriteBufferToSPI();
 			};
 		}
 	}

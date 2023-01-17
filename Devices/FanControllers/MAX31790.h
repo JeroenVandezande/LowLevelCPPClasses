@@ -202,6 +202,24 @@ namespace LowLevelEmbedded
 				/// \return true if no errors occurred.
 				bool setFanTargetRPM(uint8_t fanID, uint16_t rpm);
 
+				/// When in PWM mode this method sets the PWM output of a fan
+				/// \param fanID the zero based fan ID (0..5)
+				/// \param pwm a number between 0 and 1, 0 = 0% 1 = 100%
+				/// \return true if no errors occurred.
+				bool setFanTargetPWM(uint8_t fanID, float pwm);
+
+				/// sets the number of tacho pulses per revolution of a fan
+				/// \param fanID the zero based fan ID (0..5)
+				/// \param numberOfPulsesPerRevolution the number of pulses per revolution of the fan, typical 2 for most fans
+				/// \return true if no errors occurred.
+				void setFanPulsesPerRevolution(uint8_t fanID, uint8_t numberOfPulsesPerRevolution);
+
+				/// If the absolute value of the speed difference is less than the value in the window register, then the update rate of the PWM duty cycle is slowed to 1 LSB per second
+				/// \param fanID he zero based fan ID (0..5)
+				/// \param window the speed delta below the regulator runs slower
+				/// \return true if no errors occurred.
+				bool setFanWindow(uint8_t fanID, uint8_t window);
+
 				/// Get the actual speed of the fan.
 				/// \param fanID the zero based fan ID (0..5)
 				/// \return The fan speed in rpm.
