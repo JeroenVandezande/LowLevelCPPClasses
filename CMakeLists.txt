@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 project(LowLevelEmbedded CXX)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 add_library(${PROJECT_NAME} I2C.h SPI.h PIO.cpp PIO.h Devices/PIOs/MCP23S08.cpp
         Devices/PIOs/MCP23S08.h IOPIN.cpp IOPIN.h

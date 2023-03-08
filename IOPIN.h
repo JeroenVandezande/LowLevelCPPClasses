@@ -2,8 +2,8 @@
 // Created by Jeroen Vandezande on 29/03/2022.
 //
 
-#ifndef _IOPIN_H_
-#define _IOPIN_H_
+#ifndef LOWLEVELCPP_IOPIN_H_
+#define LOWLEVELCPP_IOPIN_H_
 
 #include "PIO.h"
 
@@ -36,4 +36,4 @@ namespace LowLevelEmbedded
 		void Toggle();
 	};
 }
-#endif //_IOPIN_H_
+#endif //LOWLEVELCPP_IOPIN_H_
