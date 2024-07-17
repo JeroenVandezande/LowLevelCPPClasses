@@ -74,7 +74,7 @@ namespace LowLevelEmbedded
                 AD7175* chipADC;
             public:
                 // Not the inherited constructor since these IO Pins are registers from the ADC
-                AD7175_IOPin::AD7175_IOPin(AD7175* adcChip, uint8_t gpioNumber)
+                AD7175_IOPin(AD7175* adcChip, uint8_t gpioNumber)
                 {
                     chipADC = adcChip;
                     gpioPinNumber = gpioNumber;
