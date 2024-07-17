@@ -55,7 +55,7 @@ namespace LowLevelEmbedded
                  * @brief Constructor for the AD7175 class.
                  * @param spi_access Pointer to an object implementing the ISPIAccess interface
                  */
-                AD7175(ISPIAccess *spi_access, uint8_t cs_ID, const std::function<void>* configureMethod);
+                AD7175(ISPIAccess *spi_access, uint8_t cs_ID, const std::function<void()>& configureMethod);
 
                 void WriteRegister8(uint8_t reg, uint8_t value);
                 void WriteRegister16(uint8_t reg, uint16_t value);

@@ -224,13 +224,13 @@ namespace LowLevelEmbedded::Devices::ADCs
     }
 
 
-    AD7175::AD7175(ISPIAccess *spi_access, uint8_t cs_ID, const std::function<void>* configureMethod)
+    AD7175::AD7175(ISPIAccess *spi_access, uint8_t cs_ID, const std::function<void()>& configureMethod)
     {
-        if (configureMethod != nullptr) configureMethod();
         SPIAccess = spi_access;
         csID = cs_ID;
         lastUsedChannel = 255; // Initialize to unused channel
         GPIO0 = new AD7175_IOPin(this, 0);
         GPIO1 = new AD7175_IOPin(this, 1);
+        if (configureMethod != nullptr) configureMethod();
     }
 }
