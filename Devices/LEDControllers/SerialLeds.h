@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "../../SPI.h"
+#include "../../LLE_SPI.h"
 
 namespace LowLevelEmbedded
 {

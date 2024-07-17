@@ -5,7 +5,7 @@
 #ifndef LOWLEVELCPP_IOPIN_H_
 #define LOWLEVELCPP_IOPIN_H_
 
-#include "PIO.h"
+#include "LLE_PIO.h"
 
 namespace LowLevelEmbedded
 {

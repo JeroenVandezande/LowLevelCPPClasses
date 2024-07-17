@@ -6,7 +6,7 @@
 #define _DAC7578_H_
 
 #include <stdint.h>
-#include "../../I2C.h"
+#include "../../LLE_I2C.h"
 
 namespace LowLevelEmbedded
 {
