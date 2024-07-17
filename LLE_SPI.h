@@ -1,5 +1,5 @@
-#ifndef LOWLEVELCPPCLASSES_LIBRARY_H
-#define LOWLEVELCPPCLASSES_LIBRARY_H
+#ifndef LOWLEVELCPP_SPI_H
+#define LOWLEVELCPP_SPI_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -24,4 +24,4 @@ namespace LowLevelEmbedded
 	};
 }
 
-#endif //LOWLEVELCPPCLASSES_LIBRARY_H
+#endif //LOWLEVELCPP_SPI_H

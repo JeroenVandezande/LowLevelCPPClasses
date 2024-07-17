@@ -4,7 +4,7 @@
 
 #include <cmath>
 #include "MAX31790.h"
-#include "tools.h"
+#include "LLE_tools.h"
 
 namespace LowLevelEmbedded
 {
