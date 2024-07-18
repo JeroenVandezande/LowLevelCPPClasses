@@ -42,18 +42,17 @@ namespace LowLevelEmbedded
                 enum PCA9685_OutputMode_t _OutputMode;
                 bool _InvertOutputs;
             public:
+                /// Constructor of the PCA9685 I2C LED Controller
+                /// \param i2CAccess The I2C access object with method points for abstracted I2C Calls
+                /// \param address The I2C Slave address
+                /// \param pwmfrequency The desired PWM Frequency (Between 25 - 1526Hz) (PRE_SCALE)
+                /// \param outputMode Sets up Open Drain vs Totem Pole output types (OUTDRV)
+                /// \param invertOutputs Inverts the output logic state (INVRT)
                 PCA9685(II2CAccess* i2CAccess,
                     uint8_t address,
                     uint16_t pwmfrequency,
                     enum PCA9685_OutputMode_t outputMode,
-                    bool invertOutputs)
-                {
-                    _I2CAccess = i2CAccess;
-                    _SlaveAddress = address;
-                    _PWMfrequency = pwmfrequency;
-                    _OutputMode = outputMode;
-                    _InvertOutputs = invertOutputs;
-                }
+                    bool invertOutputs);
                 void WritePWM(uint8_t channel, uint16_t pwm);
             };
         }
