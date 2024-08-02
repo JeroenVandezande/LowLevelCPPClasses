@@ -222,7 +222,10 @@ namespace LowLevelEmbedded::Devices::ADCs
             return gpioReg & 0x2;
         }
     }
-
+    void AD7175::Initialize()
+    {
+        if (initializeMethodPtr != nullptr) initializeMethodPtr();
+    }
 
     AD7175::AD7175(ISPIAccess *spi_access, uint8_t cs_ID, const std::function<void()>& configureMethod)
     {
@@ -231,6 +234,6 @@ namespace LowLevelEmbedded::Devices::ADCs
         lastUsedChannel = 255; // Initialize to unused channel
         GPIO0 = new AD7175_IOPin(this, 0);
         GPIO1 = new AD7175_IOPin(this, 1);
-        if (configureMethod != nullptr) configureMethod();
+        initializeMethodPtr = configureMethod;
     }
 }

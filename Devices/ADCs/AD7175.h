@@ -28,12 +28,8 @@ namespace LowLevelEmbedded
                 uint8_t csID;
                 uint8_t lastUsedChannel;
                 uint8_t getChannelConfigAddress(uint8_t aChannelIndex);
+                std::function<void()> initializeMethodPtr;
             public:
-                /**
-                 * @brief Runs during the constructor allowing for control of configuration.
-                 */
-                const std::function<void>* ConfigurationMethod;
-
                 /**
                  * @brief Represents a ADC GPIO pin.
                  *
@@ -65,6 +61,7 @@ namespace LowLevelEmbedded
                 int32_t ReadRegister24(uint8_t reg);
 
                 uint32_t GetADCValue(uint8_t channelIndex);
+                void Initialize();
             };
 
             class AD7175_IOPin : public LowLevelEmbedded::IOPIN
