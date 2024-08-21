@@ -4,6 +4,7 @@
 
 #include "EEProm24AA08.h"
 #include <stdexcept>
+#include <stdint.h>
 
 namespace LowLevelEmbedded::Devices::EEProm
 {
@@ -42,7 +43,7 @@ namespace LowLevelEmbedded::Devices::EEProm
         while (i < 3) // Poll on the device 3 times (50ms timeout for each)
         {
             uint8_t i2cAddress = WriteBufferAddresses[i];
-            if (i2cAccess->I2C_WriteMethod(i2cAddress, NULL, 0) != HAL_OK)
+            if (i2cAccess->I2C_WriteMethod(i2cAddress, NULL, 0))
             {
                 return true;
             }

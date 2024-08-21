@@ -6,8 +6,9 @@
 #define EEPROM24AA08_H
 
 #include <vector>
+#include <stdint.h>
 
-#include "I2C_Access.h"
+#include "LLE_I2C.h"
 
 namespace LowLevelEmbedded::Devices::EEProm
 {
