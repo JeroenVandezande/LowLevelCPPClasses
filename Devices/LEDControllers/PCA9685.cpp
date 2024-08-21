@@ -60,7 +60,9 @@ namespace LowLevelEmbedded
                     outdata.stop = 0;
                 }
                 outdata.registeraddress = 6 + (4 * channel);
-                _I2CAccess->I2C_WriteMethod(_SlaveAddress, reinterpret_cast<uint8_t*>(&outdata), 5);
+                uint8_t data[5] = {outdata.registeraddress, (uint8_t)outdata.start, (uint8_t)(outdata.start >> 8),
+                                    (uint8_t)outdata.stop, (uint8_t)(outdata.stop >> 8)};
+                _I2CAccess->I2C_WriteMethod(_SlaveAddress, data, 5);
             }
         }
     }

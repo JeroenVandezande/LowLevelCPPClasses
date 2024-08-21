@@ -12,7 +12,9 @@ add_library(${PROJECT_NAME} LLE_I2C.h LLE_SPI.h LLE_PIO.cpp LLE_PIO.h Devices/PI
         Devices/LEDControllers/PCA9685.cpp
         Devices/LEDControllers/PCA9685.h
         Devices/PIOs/PCA6408.cpp
-        Devices/PIOs/PCA6408.h)
+        Devices/PIOs/PCA6408.h
+        Devices/EEProms/EEProm24AA08.cpp
+        Devices/EEProms/EEProm24AA08.h)
 
-target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} Devices/PIOs Devices/FanControllers Devices/LEDControllers Devices/DACs Devices/ADCs)
+target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} Devices/PIOs Devices/FanControllers Devices/LEDControllers Devices/DACs Devices/ADCs Devices/EEProms)
 
