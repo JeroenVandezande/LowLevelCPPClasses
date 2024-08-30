@@ -41,7 +41,7 @@ namespace LowLevelEmbedded::Devices::ADCs
         wrBuf[1] = value;
 
         /* Write data to the device */
-        SPIAccess->WriteSPI(&wrBuf[0], 2, csID, SPIMode::Mode3);
+        SPIAccess->ReadWriteSPI(&wrBuf[0], 2, csID, SPIMode::Mode3);
     }
 
     void AD7175::WriteRegister16(uint8_t reg, uint16_t value)
@@ -59,7 +59,7 @@ namespace LowLevelEmbedded::Devices::ADCs
         }
 
         /* Write data to the device */
-        SPIAccess->WriteSPI(&wrBuf[0], 3, csID, SPIMode::Mode3);
+        SPIAccess->ReadWriteSPI(&wrBuf[0], 3, csID, SPIMode::Mode3);
     }
 
     void AD7175::WriteRegister24(uint8_t reg, uint32_t value)
@@ -77,7 +77,7 @@ namespace LowLevelEmbedded::Devices::ADCs
         }
 
         /* Write data to the device */
-        SPIAccess->WriteSPI(&wrBuf[0], 4, csID, SPIMode::Mode3);
+        SPIAccess->ReadWriteSPI(&wrBuf[0], 4, csID, SPIMode::Mode3);
     }
 
     int8_t AD7175::ReadRegister8(uint8_t reg)
@@ -133,11 +133,30 @@ namespace LowLevelEmbedded::Devices::ADCs
         return ret;
     }
 
+    void AD7175::ChangeChannelAnalogPinInput(uint8_t channelIndex, uint8_t analogPinInput)
+    {
+        uint8_t regAddress = getChannelConfigAddress(channelIndex);
+        uint16_t channelValue = ReadRegister16(regAddress);
+        // Check if channelValue is already set correctly
+        // Mask off channel analog pin input portion
+        uint16_t maskedValue = (channelValue & 0x03E0);
+        // Shift the masked bits to the right by 5 positions
+        maskedValue >>= 5;
+        if (maskedValue == analogPinInput) return;
+        // Otherwise change the channel
+        // Adding pin to channel
+        uint16_t analogInPinMask = 0xFC1F; // Masks off the analog pin selection
+        uint16_t analogInPinSelection = analogPinInput << 5;
+        channelValue = channelValue & analogInPinMask; // Mask off pins
+        channelValue = channelValue | analogInPinSelection; // Add requested pin
+        WriteRegister16(regAddress, channelValue);
+    }
+
     uint32_t AD7175::GetADCValue(uint8_t channelIndex)
     {
         if (this->lastUsedChannel != channelIndex) //change channel
         {
-            if (this->lastUsedChannel < 4) // turn off old channel
+            if (this->lastUsedChannel < 5) // turn off old channel
             {
                 uint8_t regAddress = getChannelConfigAddress(this->lastUsedChannel);
                 uint16_t prevValue = ReadRegister16(regAddress);

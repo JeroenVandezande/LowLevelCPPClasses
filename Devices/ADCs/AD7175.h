@@ -60,6 +60,7 @@ namespace LowLevelEmbedded
                 int16_t ReadRegister16(uint8_t reg);
                 int32_t ReadRegister24(uint8_t reg);
 
+                void ChangeChannelAnalogPinInput(uint8_t channelIndex, uint8_t analogPinInput);
                 uint32_t GetADCValue(uint8_t channelIndex);
                 void Initialize();
             };
