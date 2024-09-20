@@ -67,7 +67,7 @@ namespace LowLevelEmbedded::Devices::EEProm
         /**
          * @brief Polls the EEProm in order to figure out if the write operation is complete
          */
-        bool ackPolling();
+        bool ackPolling(int8_t blockIndex);
     public:
         EEProm24AA08(LowLevelEmbedded::II2CAccess* I2C_Access)
         {
@@ -77,14 +77,14 @@ namespace LowLevelEmbedded::Devices::EEProm
          * @brief Writes a byte array to the EEProm Chip. Maximum Address 1023.
          *
          */
-        void WriteBytes(uint8_t address, uint8_t* data, size_t length);
+        void WriteBytes(uint16_t address, uint8_t* data, size_t length);
         /**
          * @brief Reads a byte array to the EEProm Chip. Maximum Address 1023.
          *
          * @returns The Byte at the memory location
          *
          */
-        void ReadBytes(uint8_t address, uint8_t*& data, size_t length);
+        void ReadBytes(uint16_t address, uint8_t*& data, size_t length);
 
         const uint8_t USED_I2C_ADDRESSES[8]
         {

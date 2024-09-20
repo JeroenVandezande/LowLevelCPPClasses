@@ -22,6 +22,7 @@ namespace LowLevelEmbedded::Devices::EEProm
         Block1ReadBuffer.clear();
         Block2ReadBuffer.clear();
         Block3ReadBuffer.clear();
+        MainReadBuffer.clear();
     }
 
     uint8_t EEProm24AA08::getBlockForVirtualAddress(uint16_t virtualAddress)
@@ -37,12 +38,12 @@ namespace LowLevelEmbedded::Devices::EEProm
         return 0;
     }
 
-    bool EEProm24AA08::ackPolling()
+    bool EEProm24AA08::ackPolling(int8_t blockIndex)
     {
         int i = 0;
         while (i < 3) // Poll on the device 3 times (50ms timeout for each)
         {
-            uint8_t i2cAddress = WriteBufferAddresses[i];
+            uint8_t i2cAddress = WriteBufferAddresses[blockIndex];
             if (i2cAccess->I2C_WriteMethod(i2cAddress, NULL, 0))
             {
                 return true;
@@ -53,7 +54,7 @@ namespace LowLevelEmbedded::Devices::EEProm
     }
 
 
-    void EEProm24AA08::WriteBytes(uint8_t address, uint8_t *data, size_t length)
+    void EEProm24AA08::WriteBytes(uint16_t address, uint8_t *data, size_t length)
     {
         // Clear Write buffers
         initWriteBuffers();
@@ -63,29 +64,30 @@ namespace LowLevelEmbedded::Devices::EEProm
             blockAddressDataPointer = address % 256;
 
             // Access block
-            std::vector<uint8_t> currentBlock = MainWriteBuffer[currentBlockIndex];
-            if (currentBlock.size() == 0)
+            if (MainWriteBuffer[currentBlockIndex].size() == 0)
             {
                 // push address
-                currentBlock.emplace_back(blockAddressDataPointer);
+                MainWriteBuffer[currentBlockIndex].push_back(blockAddressDataPointer);
             }
 
             // Push in data
-            currentBlock.emplace_back(data[i]);
+            MainWriteBuffer[currentBlockIndex].emplace_back(data[i]);
         }
 
         // Transmit all write buffers for each block
-        for (int i = 0; i < MainWriteBuffer->size(); i++)
+        for (int i = 0; i < 4; i++)
         {
             if (MainWriteBuffer[i].size() == 0) continue;
             uint8_t i2cAddress = WriteBufferAddresses[i];
             uint8_t* transmissionData = MainWriteBuffer[i].data();
-            i2cAccess->I2C_WriteMethod(i2cAddress, transmissionData, MainWriteBuffer[i].size());
-            ackPolling();
+            // Increment transmission data pointer forward past the address portion
+            transmissionData++;
+            i2cAccess->I2C_WriteMethod(i2cAddress, transmissionData, MainWriteBuffer[i].size() - 1);
+            ackPolling(currentBlockIndex);
         }
     }
 
-    void EEProm24AA08::ReadBytes(uint8_t address, uint8_t*& data, size_t length)
+    void EEProm24AA08::ReadBytes(uint16_t address, uint8_t*& data, size_t length)
     {
         // Clear Write buffers
         initReadBuffers();
@@ -95,22 +97,21 @@ namespace LowLevelEmbedded::Devices::EEProm
             blockAddressDataPointer = address % 256;
 
             // Access block
-            std::vector<uint8_t> currentBlock = MainReadData[currentBlockIndex];
-            if (currentBlock.size() == 0)
+            if (MainReadData[currentBlockIndex].size() == 0)
             {
                 // push address
-                currentBlock.emplace_back(blockAddressDataPointer);
+                MainReadData[currentBlockIndex].push_back(blockAddressDataPointer);
 
                 // Add a length
-                currentBlock.emplace_back(0);
+                MainReadData[currentBlockIndex].push_back(0);
             }
 
             // Increment read length on this block
-            currentBlock[1]++;
+            MainReadData[currentBlockIndex][1]++;
         }
 
         // Read all data buffers for each block
-        for (int i = 0; i < MainReadData->size(); i++)
+        for (int i = 0; i < 4; i++)
         {
             if (MainReadData[i].size() == 0) continue;
 
@@ -124,16 +125,16 @@ namespace LowLevelEmbedded::Devices::EEProm
 
             // Sequential Read procedure
             uint8_t tempData[currentBlockReadLength];
-            i2cAccess->I2C_WriteMethod(i2cAddressWrite, writeData, length);
-            if (i2cAccess->I2C_ReadMethod(i2cAddressRead, tempData, currentBlockReadLength))
+            i2cAccess->I2C_WriteMethod(i2cAddressWrite, writeData, 1);
+            if (!i2cAccess->I2C_ReadMethod(i2cAddressRead, tempData, currentBlockReadLength))
             {
                 throw std::invalid_argument( "Data buffer was not filled by block as expected!" );
             };
 
             // Construct part of data array
-            for (int j = 0; j < currentBlockReadLength; i++)
+            for (int j = 0; j < currentBlockReadLength; j++)
             {
-                MainReadBuffer.emplace_back(tempData[i]);
+                MainReadBuffer.push_back(tempData[j]);
             }
         }
 
