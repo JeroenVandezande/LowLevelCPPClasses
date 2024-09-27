@@ -27,6 +27,7 @@ namespace LowLevelEmbedded
                 ISPIAccess* SPIAccess;
                 uint8_t csID;
                 uint8_t lastUsedChannel;
+                uint8_t lastUsedPin;
                 uint8_t getChannelConfigAddress(uint8_t aChannelIndex);
                 std::function<void()> initializeMethodPtr;
             public:

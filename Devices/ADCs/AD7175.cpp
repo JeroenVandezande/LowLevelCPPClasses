@@ -135,6 +135,9 @@ namespace LowLevelEmbedded::Devices::ADCs
 
     void AD7175::ChangeChannelAnalogPinInput(uint8_t channelIndex, uint8_t analogPinInput)
     {
+        // Check if pin was already used on the channel. In this case we need to do nothing
+        if ((lastUsedChannel == channelIndex) && (lastUsedPin == analogPinInput)) return;
+        // Check configuration for channel and pin input
         uint8_t regAddress = getChannelConfigAddress(channelIndex);
         uint16_t channelValue = ReadRegister16(regAddress);
         // Check if channelValue is already set correctly
@@ -150,6 +153,7 @@ namespace LowLevelEmbedded::Devices::ADCs
         channelValue = channelValue & analogInPinMask; // Mask off pins
         channelValue = channelValue | analogInPinSelection; // Add requested pin
         WriteRegister16(regAddress, channelValue);
+        lastUsedPin = analogPinInput;
     }
 
     uint32_t AD7175::GetADCValue(uint8_t channelIndex)
@@ -251,6 +255,7 @@ namespace LowLevelEmbedded::Devices::ADCs
         SPIAccess = spi_access;
         csID = cs_ID;
         lastUsedChannel = 255; // Initialize to unused channel
+        lastUsedPin = 255; // Init unused pin
         GPIO0 = new AD7175_IOPin(this, 0);
         GPIO1 = new AD7175_IOPin(this, 1);
         initializeMethodPtr = configureMethod;
