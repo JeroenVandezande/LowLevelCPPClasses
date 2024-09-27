@@ -154,6 +154,7 @@ namespace LowLevelEmbedded::Devices::ADCs
         channelValue = channelValue | analogInPinSelection; // Add requested pin
         WriteRegister16(regAddress, channelValue);
         lastUsedPin = analogPinInput;
+        lastUsedChannel = channelIndex;
     }
 
     uint32_t AD7175::GetADCValue(uint8_t channelIndex)
