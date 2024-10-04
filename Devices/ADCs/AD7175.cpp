@@ -133,10 +133,11 @@ namespace LowLevelEmbedded::Devices::ADCs
         return ret;
     }
 
-    void AD7175::ChangeChannelAnalogPinInput(uint8_t channelIndex, uint8_t analogPinInput)
+    bool AD7175::ChangeAnalogPinInputOnChannel(uint8_t channelIndex, uint8_t analogPinInput)
     {
         // Check if pin was already used on the channel. In this case we need to do nothing
-        if ((lastUsedChannel == channelIndex) && (lastUsedPin == analogPinInput)) return;
+        if ((lastUsedChannel == channelIndex) && (lastUsedPin == analogPinInput)) return false;
+        lastUsedPin = analogPinInput;
         // Check configuration for channel and pin input
         uint8_t regAddress = getChannelConfigAddress(channelIndex);
         uint16_t channelValue = ReadRegister16(regAddress);
@@ -145,7 +146,7 @@ namespace LowLevelEmbedded::Devices::ADCs
         uint16_t maskedValue = (channelValue & 0x03E0);
         // Shift the masked bits to the right by 5 positions
         maskedValue >>= 5;
-        if (maskedValue == analogPinInput) return;
+        if (maskedValue == analogPinInput) return true;
         // Otherwise change the channel
         // Adding pin to channel
         uint16_t analogInPinMask = 0xFC1F; // Masks off the analog pin selection
@@ -153,11 +154,10 @@ namespace LowLevelEmbedded::Devices::ADCs
         channelValue = channelValue & analogInPinMask; // Mask off pins
         channelValue = channelValue | analogInPinSelection; // Add requested pin
         WriteRegister16(regAddress, channelValue);
-        lastUsedPin = analogPinInput;
-        lastUsedChannel = channelIndex;
+        return true;
     }
 
-    uint32_t AD7175::GetADCValue(uint8_t channelIndex)
+    bool AD7175::ChangeChannel(uint8_t channelIndex)
     {
         if (this->lastUsedChannel != channelIndex) //change channel
         {
@@ -173,8 +173,13 @@ namespace LowLevelEmbedded::Devices::ADCs
             prevValue |= CH_MAP_REG_CHEN;
             WriteRegister16(regAddress, prevValue);
             this->lastUsedChannel = channelIndex;
+            return true;
         }
+        return false;
+    }
 
+    uint32_t AD7175::GetADCValue(uint8_t channelIndex)
+    {
         //start ADC
         uint16_t mode = ReadRegister16(AD7175_ADCMODE) & 0b1110011100001100;
         mode |= ADC_MODE_REG_MODE_SINGLE;

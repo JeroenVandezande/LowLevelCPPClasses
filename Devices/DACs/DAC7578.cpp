@@ -28,8 +28,8 @@ namespace LowLevelEmbedded
 			{
 				uint8_t data[3];
 				data[0] = CA_WRITEANDUPDATE | channel;
-				data[1] = value >> 4;
-				data[2] = value << 4;
+				data[1] = (value & 0x0FF0) >> 4;
+				data[2] = (value & 0x000F) << 4;
  				return _I2CAccess->I2C_WriteMethod(_SlaveAddress, &data[0], 3);
 			}
 
