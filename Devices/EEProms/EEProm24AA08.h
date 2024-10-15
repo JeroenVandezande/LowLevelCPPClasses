@@ -35,17 +35,17 @@ namespace LowLevelEmbedded::Devices::EEProm
             while (dataIndex < dataSize)
             {
                 std::vector<uint8_t> currentPage;
-                currentPage.emplace_back(currentAddress); // Include the starting address for this page
+                currentPage.push_back(currentAddress); // Include the starting address for this page
 
                 size_t bytesInPage = 0;
                 while (bytesInPage < 16 && dataIndex < dataSize)
                 {
-                    currentPage.emplace_back(data[dataIndex]);
+                    currentPage.push_back(data[dataIndex]);
                     dataIndex++;
                     bytesInPage++;
                 }
 
-                PageWriteBuffers.emplace_back(currentPage);
+                PageWriteBuffers.push_back(currentPage);
                 currentAddress += bytesInPage; // Increment the address by the number of bytes written
             }
         }
@@ -136,18 +136,7 @@ namespace LowLevelEmbedded::Devices::EEProm
     {
     private:
         LowLevelEmbedded::II2CAccess* i2cAccess;
-        std::vector<uint8_t> Block0ReadBuffer;
-        std::vector<uint8_t> Block1ReadBuffer;
-        std::vector<uint8_t> Block2ReadBuffer;
-        std::vector<uint8_t> Block3ReadBuffer;
-        std::vector<uint8_t> MainReadData[4]
-        {
-            Block0ReadBuffer,
-            Block1ReadBuffer,
-            Block2ReadBuffer,
-            Block3ReadBuffer
-        };
-        std::vector<uint8_t> MainReadBuffer;
+        std::vector<uint8_t> MainReadData[4];
         const uint8_t ReadBufferAddresses[4]
         {
            0b10100001 | 0x00,

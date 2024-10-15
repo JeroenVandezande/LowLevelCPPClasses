@@ -15,11 +15,10 @@ namespace LowLevelEmbedded::Devices::EEProm
 
     void EEProm24AA08::initReadBuffers()
     {
-        Block0ReadBuffer.clear();
-        Block1ReadBuffer.clear();
-        Block2ReadBuffer.clear();
-        Block3ReadBuffer.clear();
-        MainReadBuffer.clear();
+        for(int i = 0; i < 4; i++)
+        {
+            MainReadData[i].clear();
+        }
     }
 
     uint8_t EEProm24AA08::getBlockForVirtualAddress(uint16_t virtualAddress)
@@ -73,8 +72,8 @@ namespace LowLevelEmbedded::Devices::EEProm
         initReadBuffers();
         for (int i = 0; i < length; i++)
         {
-            currentBlockIndex = getBlockForVirtualAddress(address);
-            blockAddressDataPointer = address % 256;
+            currentBlockIndex = getBlockForVirtualAddress(address + i);
+            blockAddressDataPointer = (address + i) % 256;
 
             // Access block
             if (MainReadData[currentBlockIndex].size() == 0)
@@ -91,6 +90,7 @@ namespace LowLevelEmbedded::Devices::EEProm
         }
 
         // Read all data buffers for each block
+        int dataIndex = 0;
         for (int i = 0; i < 4; i++)
         {
             if (MainReadData[i].size() == 0) continue;
@@ -108,13 +108,12 @@ namespace LowLevelEmbedded::Devices::EEProm
                 throw std::invalid_argument( "Data buffer was not filled by block as expected!" );
             };
 
-            // Construct part of data array
+            // Copy directly to out buffer
             for (int j = 0; j < currentBlockReadLength; j++)
             {
-                MainReadBuffer.push_back(tempData[j]);
+                data[dataIndex++] = tempData[j];
             }
         }
 
-        data = MainReadBuffer.data();
     }
 }
