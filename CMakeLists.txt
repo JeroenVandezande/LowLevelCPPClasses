@@ -14,7 +14,10 @@ add_library(${PROJECT_NAME} LLE_I2C.h LLE_SPI.h LLE_PIO.cpp LLE_PIO.h Devices/PI
         Devices/PIOs/PCA6408.cpp
         Devices/PIOs/PCA6408.h
         Devices/EEProms/EEProm24AA08.cpp
-        Devices/EEProms/EEProm24AA08.h)
+        Devices/EEProms/EEProm24AA08.h
+        Devices/Thermopiles/TSD305.cpp
+        Devices/Thermopiles/TSD305.h
+        Devices/Thermopiles/TSD305_Constants.h)
 
 target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} Devices/PIOs Devices/FanControllers Devices/LEDControllers Devices/DACs Devices/ADCs Devices/EEProms)
 
