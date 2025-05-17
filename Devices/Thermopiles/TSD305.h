@@ -6,7 +6,7 @@
 #define TSD305_H
 
 #include "LLE_I2C.h"
-#include "TSD350_Constants.h"
+#include "TSD305_Constants.h"
 
 namespace LowLevelEmbedded
 {
@@ -23,7 +23,7 @@ namespace LowLevelEmbedded
                 TSD305_Constants::ErrorCode ReadWord(uint8_t data_address, uint16_t& data);
                 TSD305_Constants::ErrorCode ReadLongWord(uint8_t data_address, uint32_t& data);
                 TSD305_Constants::ErrorCode RecalcCRC();
-                TSD305_Constants::ErrorCode TSD305::CheckStatusByte(uint8_t statusByte);
+                TSD305_Constants::ErrorCode CheckStatusByte(uint8_t statusByte);
 
             public:
                 TSD305(II2CAccess *i2cAccess, uint8_t i2cAddress = TSD305_Constants::DEFAULT_I2C_ADDRESS);
@@ -35,7 +35,8 @@ namespace LowLevelEmbedded
                 TSD305_Constants::ErrorCode ReadCompensationCoefficients(float coeffs[5]);
                 TSD305_Constants::ErrorCode ReadObjectTempCoefficients(float coeffs[5]);
                 TSD305_Constants::ErrorCode ChangeI2CAddress(uint8_t newAddress);
-                TSD305_Constants::ErrorCode PerformMeasurement(uint32_t& objectADC, uint32_t& sensorADC);
+                TSD305_Constants::ErrorCode PerformMeasurement(uint32_t& objectADC, uint32_t& sensorADC,
+                    TSD305_Constants::MeasurementType type = TSD305_Constants::MeasurementType::SAMPLES_1);
             };
         }
     }

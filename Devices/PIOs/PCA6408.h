@@ -32,6 +32,14 @@ namespace LowLevelEmbedded
                 bool ConfigurePort(uint8_t config);
                 bool ConfigurePortPolarity(uint8_t polarityConfig);
             };
+
+            enum PCA6408A_Registers_t
+            {
+                PCA6408A_Registers_InputPort = 0,
+                PCA6408A_Registers_OutputPort = 1,
+                PCA6408A_Registers_PolarityInversion = 2,
+                PCA6408A_Registers_Configuration = 3
+            };
         }
     }
 }

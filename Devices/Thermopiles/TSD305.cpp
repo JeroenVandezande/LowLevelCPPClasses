@@ -193,11 +193,10 @@ namespace LowLevelEmbedded
                 uint16_t data = 0;
                 TSD305_Constants::ErrorCode result = ReadWord(TSD305_Constants::ADDR_OBJECT_TEMP_MIN, data);
                 tmin = data;
-
+                if (result != TSD305_Constants::ErrorCode::OK) return result;
                 result = ReadWord(TSD305_Constants::ADDR_OBJECT_TEMP_MAX, data);
                 tmax = data;
-
-                return TSD305_Constants::ErrorCode::OK;
+                return result;
             }
 
             /**
@@ -246,6 +245,7 @@ namespace LowLevelEmbedded
                 TSD305_Constants::ErrorCode result = TSD305_Constants::ErrorCode::OK;
                 for (int i = 0; i < 5; ++i) {
                     result = ReadLongWord(addresses[i], data);
+                    if (result != TSD305_Constants::ErrorCode::OK) return result;
                     coeffs[i] = static_cast<float>(data);
                 }
                 return result;
@@ -272,9 +272,38 @@ namespace LowLevelEmbedded
                 // Power Cycle is required!
             }
 
-            TSD305_Constants::ErrorCode TSD305::PerformMeasurement(uint32_t& objectADC, uint32_t& sensorADC)
+            /**
+             * Performs a measurement by communicating with the TSD305 device via I2C and retrieves the
+             * object and sensor ADC values for the specified measurement type.
+             *
+             * @param objectADC A reference to a 32-bit unsigned integer where the object ADC value will be stored.
+             * @param sensorADC A reference to a 32-bit unsigned integer where the sensor ADC value will be stored.
+             * @param type The type of measurement to be performed, specified as a value of TSD305_Constants::MeasurementType.
+             *
+             * @return Returns a TSD305_Constants::ErrorCode indicating the status of the execution. Possible values include:
+             *         - I2C_WRITE_ERROR if an error occurred during the I2C write operation.
+             *         - I2C_READ_ERROR if an error occurred during the I2C read operation.
+             *         - The result of CheckStatusByte if the status byte indicates an error.
+             *         - OK if the operation completes successfully.
+             */
+            TSD305_Constants::ErrorCode TSD305::PerformMeasurement(uint32_t& objectADC, uint32_t& sensorADC,
+                                                                   TSD305_Constants::MeasurementType type)
             {
-
+                uint8_t readCommand = static_cast<uint8_t>(type);
+                uint8_t readBuffer[7] = { 0, 0, 0, 0, 0, 0, 0 };
+                if (!i2cAccess->I2C_WriteMethod(i2cAddress, &readCommand, 1))
+                    return TSD305_Constants::ErrorCode::I2C_WRITE_ERROR;
+                if (!i2cAccess->I2C_ReadMethod(i2cAddress, readBuffer, 7))
+                    return TSD305_Constants::ErrorCode::I2C_READ_ERROR;
+                if (CheckStatusByte(readBuffer[0]) != TSD305_Constants::ErrorCode::OK)
+                    return CheckStatusByte(readBuffer[0]);
+                objectADC = static_cast<uint32_t>(readBuffer[1] << 16) |
+                            static_cast<uint32_t>(readBuffer[2] << 8) |
+                            static_cast<uint32_t>(readBuffer[3]);
+                sensorADC = static_cast<uint32_t>(readBuffer[4] << 16) |
+                            static_cast<uint32_t>(readBuffer[5] << 8) |
+                            static_cast<uint32_t>(readBuffer[6]);
+                return TSD305_Constants::ErrorCode::OK;
             }
 
         }
