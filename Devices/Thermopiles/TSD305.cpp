@@ -10,6 +10,9 @@ namespace LowLevelEmbedded
     {
         namespace Thermopiles
         {
+            // Initialize the static member
+            void (*TSD305::s_waitMs)(uint32_t) = nullptr;
+
             /**
              * Constructor for TSD305 class.
              * Initializes the TSD305 object with a specific I2C access interface and device address.
@@ -20,8 +23,21 @@ namespace LowLevelEmbedded
             TSD305::TSD305(II2CAccess *i2cAccess, uint8_t i2cAddress)
             {
                 this->i2cAccess = i2cAccess;
-                this->i2cAddress = i2cAddress;
+                this->i2cAddress = i2cAddress << 1;
             }
+
+            // Implementation of the static setter
+            void TSD305::SetWaitFunction(void (*waitFunctionPtr)(uint32_t)) {
+                s_waitMs = waitFunctionPtr;
+            }
+
+            // Implementation of the static wait helper
+            void TSD305::Wait(uint32_t milliseconds) {
+                if (s_waitMs != nullptr) {
+                    s_waitMs(milliseconds);
+                }
+            }
+
 
             /**
              * Checks the provided status byte for specific error flags and returns the corresponding error code.
@@ -58,7 +74,7 @@ namespace LowLevelEmbedded
             TSD305_Constants::ErrorCode TSD305::RecalcCRC()
             {
                 uint8_t data[1] = {TSD305_Constants::CALC_CRC_ADDRESS };
-                if (!i2cAccess->I2C_WriteMethod(i2cAddress, data, 1))
+                if (!i2cAccess->I2C_WriteMethod(i2cAddress, &data[0], 1))
                 {
                     return TSD305_Constants::ErrorCode::I2C_WRITE_ERROR;
                 }
@@ -67,19 +83,21 @@ namespace LowLevelEmbedded
             }
 
             /**
-             * Writes a byte of data to the specified address on the I2C device.
+             * Writes a word of data to the specified address on the I2C device.
              *
              * @param data_address The address on the I2C device where the data will be written.
-             * @param data The byte of data to be written to the specified address.
+             * @param data The word of data to be written to the specified address.
              * @return An error code of type TSD305_Constants::ErrorCode
              *         indicating the success or failure of the operation.
              *         Returns TSD305_Constants::ErrorCode::OK on success,
              *         or TSD305_Constants::ErrorCode::I2C_WRITE_ERROR on failure.
              */
-            TSD305_Constants::ErrorCode TSD305::WriteByte(uint8_t data_address, uint8_t data)
+            TSD305_Constants::ErrorCode TSD305::WriteWord(uint8_t data_address, uint16_t data)
             {
-                uint8_t buffer[2] = { data_address, data };
-                if (!i2cAccess->I2C_WriteMethod(i2cAddress, buffer, 2))
+                uint8_t highByte = (uint8_t)(data >> 8);
+                uint8_t lowByte = (uint8_t)(data & 0xFF);
+                uint8_t buffer[3] = { data_address, highByte, lowByte };
+                if (!i2cAccess->I2C_WriteMethod(i2cAddress, &buffer[0], 3))
                 {
                     return TSD305_Constants::ErrorCode::I2C_WRITE_ERROR;
                 }
@@ -95,11 +113,12 @@ namespace LowLevelEmbedded
              */
             TSD305_Constants::ErrorCode TSD305::ReadWord(uint8_t data_address, uint16_t& data)
             {
-                uint8_t addr = data_address;
+                uint8_t addr[1] = { data_address };
                 uint8_t data_out[3] = { 0, 0, 0 };
-                if (!i2cAccess->I2C_WriteMethod(i2cAddress, &addr, 1))
+                if (!i2cAccess->I2C_WriteMethod(i2cAddress, &addr[0], 1))
                     return TSD305_Constants::ErrorCode::I2C_WRITE_ERROR;
-                if (!i2cAccess->I2C_ReadMethod(i2cAddress, data_out, 3))
+                s_waitMs(1);
+                if (!i2cAccess->I2C_ReadMethod(i2cAddress + 1, data_out, 3))
                     return TSD305_Constants::ErrorCode::I2C_READ_ERROR;
                 data = (uint16_t)((data_out[1] << 8) | data_out[2]);
                 return CheckStatusByte(data_out[0]);
@@ -118,6 +137,7 @@ namespace LowLevelEmbedded
                 uint16_t word2 = 0;
                 TSD305_Constants::ErrorCode result = ReadWord(data_address, word1);
                 if (result != TSD305_Constants::ErrorCode::OK) return result;
+                s_waitMs(1);
                 result = ReadWord(data_address + 1, word2);
                 data = (uint32_t)((word1 << 16) | word2);
                 return result;
@@ -262,9 +282,11 @@ namespace LowLevelEmbedded
              */
             TSD305_Constants::ErrorCode TSD305::ChangeI2CAddress(uint8_t newAddress)
             {
+                uint16_t newAddressWord = newAddress;
                 TSD305_Constants::ErrorCode result =
-                    WriteByte(TSD305_Constants::ADDR_I2C_ADDRESS + TSD305_Constants::WRITE_DATA_OFFSET, newAddress);
+                    WriteWord(TSD305_Constants::ADDR_I2C_ADDRESS + TSD305_Constants::WRITE_DATA_OFFSET, newAddressWord);
                 if (result != TSD305_Constants::ErrorCode::OK) return result;
+                s_waitMs(20);
                 result = RecalcCRC();
                 if (result != TSD305_Constants::ErrorCode::OK) return result;
                 i2cAddress = newAddress;
@@ -272,29 +294,20 @@ namespace LowLevelEmbedded
                 // Power Cycle is required!
             }
 
-            /**
-             * Performs a measurement by communicating with the TSD305 device via I2C and retrieves the
-             * object and sensor ADC values for the specified measurement type.
-             *
-             * @param objectADC A reference to a 32-bit unsigned integer where the object ADC value will be stored.
-             * @param sensorADC A reference to a 32-bit unsigned integer where the sensor ADC value will be stored.
-             * @param type The type of measurement to be performed, specified as a value of TSD305_Constants::MeasurementType.
-             *
-             * @return Returns a TSD305_Constants::ErrorCode indicating the status of the execution. Possible values include:
-             *         - I2C_WRITE_ERROR if an error occurred during the I2C write operation.
-             *         - I2C_READ_ERROR if an error occurred during the I2C read operation.
-             *         - The result of CheckStatusByte if the status byte indicates an error.
-             *         - OK if the operation completes successfully.
-             */
-            TSD305_Constants::ErrorCode TSD305::PerformMeasurement(uint32_t& objectADC, uint32_t& sensorADC,
-                                                                   TSD305_Constants::MeasurementType type)
+            TSD305_Constants::ErrorCode TSD305::RequestMeasurement(TSD305_Constants::MeasurementType type)
             {
-                uint8_t readCommand = static_cast<uint8_t>(type);
-                uint8_t readBuffer[7] = { 0, 0, 0, 0, 0, 0, 0 };
-                if (!i2cAccess->I2C_WriteMethod(i2cAddress, &readCommand, 1))
+                uint8_t readCommand[1] = { static_cast<uint8_t>(type) };
+                if (!i2cAccess->I2C_WriteMethod(i2cAddress, &readCommand[0], 1))
                     return TSD305_Constants::ErrorCode::I2C_WRITE_ERROR;
-                if (!i2cAccess->I2C_ReadMethod(i2cAddress, readBuffer, 7))
+                return TSD305_Constants::ErrorCode::OK;
+            }
+
+            TSD305_Constants::ErrorCode TSD305::GetMeasurement(uint32_t& objectADC, uint32_t& sensorADC)
+            {
+                uint8_t readBuffer[7] = { 0, 0, 0, 0, 0, 0, 0 };
+                if (!i2cAccess->I2C_ReadMethod(i2cAddress + 1, &readBuffer[0], 7))
                     return TSD305_Constants::ErrorCode::I2C_READ_ERROR;
+                s_waitMs(1);
                 if (CheckStatusByte(readBuffer[0]) != TSD305_Constants::ErrorCode::OK)
                     return CheckStatusByte(readBuffer[0]);
                 objectADC = static_cast<uint32_t>(readBuffer[1] << 16) |

@@ -18,8 +18,9 @@ namespace LowLevelEmbedded
             private:
                 uint8_t i2cAddress;
                 II2CAccess* i2cAccess;
-
-                TSD305_Constants::ErrorCode WriteByte(uint8_t data_address, uint8_t data);
+                // Function pointer for microcontroller-specific wait function
+                static void (*s_waitMs)(uint32_t milliseconds);
+                TSD305_Constants::ErrorCode WriteWord(uint8_t data_address, uint16_t data);
                 TSD305_Constants::ErrorCode ReadWord(uint8_t data_address, uint16_t& data);
                 TSD305_Constants::ErrorCode ReadLongWord(uint8_t data_address, uint32_t& data);
                 TSD305_Constants::ErrorCode RecalcCRC();
@@ -28,6 +29,11 @@ namespace LowLevelEmbedded
             public:
                 TSD305(II2CAccess *i2cAccess, uint8_t i2cAddress = TSD305_Constants::DEFAULT_I2C_ADDRESS);
 
+                // Setter for the wait function pointer
+                static void SetWaitFunction(void (*waitFunctionPtr)(uint32_t));
+                // Optional static wait helper method
+                static void Wait(uint32_t milliseconds);
+
                 TSD305_Constants::ErrorCode ReadTemperatureCoefficient(float& tc);
                 TSD305_Constants::ErrorCode ReadReferenceTemperature(float& tref);
                 TSD305_Constants::ErrorCode ReadSensorTempRange(int16_t& tmin, int16_t& tmax);
@@ -35,8 +41,8 @@ namespace LowLevelEmbedded
                 TSD305_Constants::ErrorCode ReadCompensationCoefficients(float coeffs[5]);
                 TSD305_Constants::ErrorCode ReadObjectTempCoefficients(float coeffs[5]);
                 TSD305_Constants::ErrorCode ChangeI2CAddress(uint8_t newAddress);
-                TSD305_Constants::ErrorCode PerformMeasurement(uint32_t& objectADC, uint32_t& sensorADC,
-                    TSD305_Constants::MeasurementType type = TSD305_Constants::MeasurementType::SAMPLES_1);
+                TSD305_Constants::ErrorCode GetMeasurement(uint32_t& objectADC, uint32_t& sensorADC);
+                TSD305_Constants::ErrorCode RequestMeasurement(TSD305_Constants::MeasurementType type = TSD305_Constants::MeasurementType::SAMPLES_1);
             };
         }
     }
