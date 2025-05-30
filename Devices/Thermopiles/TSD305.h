@@ -16,6 +16,17 @@ namespace LowLevelEmbedded
         {
             class TSD305 {
             private:
+                // Calibration Values
+                int16_t minSenTemp;
+                int16_t maxSenTemp;
+                int16_t minObjTemp;
+                int16_t maxObjTemp;
+                float tc;
+                float tref;
+                float coeffs[5] = {0,0,0,0,0};
+                float objCoeffs[5] = {0,0,0,0,0};
+                bool calibrationValuesSet;
+
                 uint8_t i2cAddress;
                 II2CAccess* i2cAccess;
                 // Function pointer for microcontroller-specific wait function
@@ -27,9 +38,18 @@ namespace LowLevelEmbedded
                 TSD305_Constants::ErrorCode CheckStatusByte(uint8_t statusByte);
 
             public:
+                int16_t MinSenTemp() const { return minSenTemp; }
+                int16_t MaxSenTemp() const { return maxSenTemp; }
+                int16_t MinObjTemp() const { return minObjTemp; }
+                int16_t MaxObjTemp() const { return maxObjTemp; }
+                float Tc() const { return tc; }
+                float Tref() const { return tref; }
+                float Coeffs(int index) const { return coeffs[index]; }
+                float ObjCoeffs(int index) const { return objCoeffs[index]; }
+
                 TSD305(II2CAccess *i2cAccess, uint8_t i2cAddress = TSD305_Constants::DEFAULT_I2C_ADDRESS);
 
-                // Setter for the wait function pointer
+                // Setter for the wait function pointer (Optional, needed for I2C Address Programming)
                 static void SetWaitFunction(void (*waitFunctionPtr)(uint32_t));
                 // Optional static wait helper method
                 static void Wait(uint32_t milliseconds);
@@ -43,6 +63,7 @@ namespace LowLevelEmbedded
                 TSD305_Constants::ErrorCode ChangeI2CAddress(uint8_t newAddress);
                 TSD305_Constants::ErrorCode GetMeasurement(uint32_t& objectADC, uint32_t& sensorADC);
                 TSD305_Constants::ErrorCode RequestMeasurement(TSD305_Constants::MeasurementType type = TSD305_Constants::MeasurementType::SAMPLES_1);
+                void ConvertMeasurement(uint32_t objectADC, uint32_t sensorADC, float& tSen, float& tObj);
             };
         }
     }

@@ -117,7 +117,6 @@ namespace LowLevelEmbedded
                 uint8_t data_out[3] = { 0, 0, 0 };
                 if (!i2cAccess->I2C_WriteMethod(i2cAddress, &addr[0], 1))
                     return TSD305_Constants::ErrorCode::I2C_WRITE_ERROR;
-                s_waitMs(1);
                 if (!i2cAccess->I2C_ReadMethod(i2cAddress + 1, data_out, 3))
                     return TSD305_Constants::ErrorCode::I2C_READ_ERROR;
                 data = (uint16_t)((data_out[1] << 8) | data_out[2]);
@@ -137,7 +136,6 @@ namespace LowLevelEmbedded
                 uint16_t word2 = 0;
                 TSD305_Constants::ErrorCode result = ReadWord(data_address, word1);
                 if (result != TSD305_Constants::ErrorCode::OK) return result;
-                s_waitMs(1);
                 result = ReadWord(data_address + 1, word2);
                 data = (uint32_t)((word1 << 16) | word2);
                 return result;
@@ -299,6 +297,16 @@ namespace LowLevelEmbedded
                 uint8_t readCommand[1] = { static_cast<uint8_t>(type) };
                 if (!i2cAccess->I2C_WriteMethod(i2cAddress, &readCommand[0], 1))
                     return TSD305_Constants::ErrorCode::I2C_WRITE_ERROR;
+                if (!calibrationValuesSet)
+                {
+                    ReadObjectTempCoefficients(objCoeffs);
+                    ReadCompensationCoefficients(coeffs);
+                    ReadSensorTempRange(minSenTemp, maxSenTemp);
+                    ReadObjectTempRange(minObjTemp, maxObjTemp);
+                    ReadReferenceTemperature(tref);
+                    ReadTemperatureCoefficient(tc);
+                    calibrationValuesSet = true;
+                }
                 return TSD305_Constants::ErrorCode::OK;
             }
 
@@ -307,7 +315,6 @@ namespace LowLevelEmbedded
                 uint8_t readBuffer[7] = { 0, 0, 0, 0, 0, 0, 0 };
                 if (!i2cAccess->I2C_ReadMethod(i2cAddress + 1, &readBuffer[0], 7))
                     return TSD305_Constants::ErrorCode::I2C_READ_ERROR;
-                s_waitMs(1);
                 if (CheckStatusByte(readBuffer[0]) != TSD305_Constants::ErrorCode::OK)
                     return CheckStatusByte(readBuffer[0]);
                 objectADC = static_cast<uint32_t>(readBuffer[1] << 16) |
@@ -317,6 +324,36 @@ namespace LowLevelEmbedded
                             static_cast<uint32_t>(readBuffer[5] << 8) |
                             static_cast<uint32_t>(readBuffer[6]);
                 return TSD305_Constants::ErrorCode::OK;
+            }
+
+            void TSD305::ConvertMeasurement(uint32_t objectADC, uint32_t sensorADC,
+                float& tSen, float& tObj)
+            {
+                // Calculate Sensor
+                tSen = (float)sensorADC / 16777216.0 * (maxSenTemp - minSenTemp) + minSenTemp;
+
+                // Calculate TC Correction Factor
+                float fTCF = 1.0 + ((tSen - tref) * tc);
+
+                // Calculate Offset
+                float fOffset = coeffs[0] * tSen * tSen * tSen * tSen;
+                fOffset = fOffset + coeffs[1] * tSen * tSen * tSen;
+                fOffset = fOffset + coeffs[2] * tSen * tSen;
+                fOffset = fOffset + coeffs[3] * tSen;
+                fOffset = fOffset + coeffs[4];
+                fOffset = fOffset * fTCF;
+
+                // Align ADC Value
+                objectADC = objectADC - 8388608;
+
+                // Calculate Object Temperature
+                float fADCcomp = (float)objectADC + fOffset;
+                fADCcomp = fADCcomp / fTCF;
+                tObj = objCoeffs[0] * fADCcomp * fADCcomp * fADCcomp * fADCcomp;
+                tObj = tObj + objCoeffs[1] * fADCcomp * fADCcomp * fADCcomp;
+                tObj = tObj + objCoeffs[2] * fADCcomp * fADCcomp;
+                tObj = tObj + objCoeffs[3] * fADCcomp;
+                tObj = tObj + objCoeffs[4];
             }
 
         }
