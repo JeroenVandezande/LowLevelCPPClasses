@@ -27,7 +27,10 @@ namespace LowLevelEmbedded::Devices::EEProm
         if (virtualAddress < 512) return 1; // virtualAddress >= 256 implied
         if (virtualAddress < 768) return 2; // virtualAddress >= 512 implied
         if (virtualAddress < 1024) return 3; // virtualAddress >= 768 implied
+#ifndef LOWLEVELCPPCLASSES_DISABLE_EXCEPTIONS
         throw std::invalid_argument("Received Bad Address Value! Addresses are between 0-1023");
+#endif
+
     }
 
     bool EEProm24AA08::ackPolling(int8_t blockIndex)
@@ -105,7 +108,10 @@ namespace LowLevelEmbedded::Devices::EEProm
             ackPolling(i); // Wait for block to be ready
             if (!i2cAccess->I2C_Mem_Read(i2cAddressRead, currentBlockAddressPointer, 1, tempData, currentBlockReadLength))
             {
+#ifndef LOWLEVELCPPCLASSES_DISABLE_EXCEPTIONS
                 throw std::invalid_argument( "Data buffer was not filled by block as expected!" );
+#endif
+
             };
 
             // Copy directly to out buffer
