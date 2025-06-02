@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.50)
 project(LowLevelEmbedded CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -17,7 +17,20 @@ add_library(${PROJECT_NAME} LLE_I2C.h LLE_SPI.h LLE_PIO.cpp LLE_PIO.h Devices/PI
         Devices/EEProms/EEProm24AA08.h
         Devices/Thermopiles/TSD305.cpp
         Devices/Thermopiles/TSD305.h
-        Devices/Thermopiles/TSD305_Constants.h)
+        Devices/Thermopiles/TSD305_Constants.h
+        Logging/RTTLogAppenders.h
+        Segger_RTT/SEGGER_RTT.c
+        Segger_RTT/SEGGER_RTT.h)
+
+include(cpm/CPM.cmake)
+
+CPMAddPackage(
+        NAME plog
+        GITHUB_REPOSITORY SergiusTheBest/plog
+        GIT_TAG 94899e0b926ac1b0f4750bfbd495167b4a6ae9ef
+)
+
+target_link_libraries(${CMAKE_PROJECT_NAME} plog::plog)
 
 target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} Devices/PIOs Devices/FanControllers Devices/LEDControllers Devices/DACs Devices/ADCs Devices/EEProms)
 
