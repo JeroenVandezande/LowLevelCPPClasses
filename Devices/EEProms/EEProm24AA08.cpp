@@ -30,7 +30,7 @@ namespace LowLevelEmbedded::Devices::EEProm
 #ifndef LOWLEVELCPPCLASSES_DISABLE_EXCEPTIONS
         throw std::invalid_argument("Received Bad Address Value! Addresses are between 0-1023");
 #endif
-
+        return 0;
     }
 
     bool EEProm24AA08::ackPolling(int8_t blockIndex)

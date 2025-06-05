@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.50)
+cmake_minimum_required(VERSION 3.31.6)
 project(LowLevelEmbedded CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -30,7 +30,7 @@ CPMAddPackage(
         GIT_TAG 94899e0b926ac1b0f4750bfbd495167b4a6ae9ef
 )
 
-target_link_libraries(${CMAKE_PROJECT_NAME} plog::plog)
+target_link_libraries(${PROJECT_NAME} plog::plog)
 
 target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} Segger_RTT Logging Devices/PIOs Devices/FanControllers Devices/LEDControllers Devices/DACs Devices/ADCs Devices/EEProms)
 
