@@ -4,11 +4,31 @@
 #include "TMC5130_Macros.h"
 #include "TMC5130_Register.h"
 #include "TMC5130_RegisterAccess.h"
+#include "TMC5130_Utils.h"
 
 #include <ulog.h>
 
 namespace LowLevelEmbedded::Devices::MotorControllers
 {
+
+void TMC5130::StartTimedConstantVelocity(uint32_t acc, int32_t velocity,
+                                         uint32_t timeInms, uint32_t ticksInms)
+{
+  this->_lastStartTimeInms = ticksInms;
+  this->_targetMoveTimeInms = timeInms;
+  // Set Current for Motor
+  _writeInt(TMC5130_IHOLD_IRUN, this->_IHOLD_IRUN_NORMAL);
+  // Set absolute velocity
+  _writeInt(TMC5130_VMAX, SpeedPPSToMotorUnits(abs(velocity)));
+  _writeInt(TMC5130_AMAX, AccDecPPSToMotorUnits(acc));
+  // Set StallGuard On
+  _writeInt(TMC5130_TCOOLTHRS, 1048570);
+  // Set direction
+  _writeInt(TMC5130_RAMPMODE, (velocity >= 0) ? TMC5130_MODE_VELPOS : TMC5130_MODE_VELNEG);
+  this->MotorState = msTimedConstantVelocityRampUp;
+}
+
+
 void TMC5130::_writeConfiguration()
 {
   log_debug("TMC5130 #%d: Writing configuration", ChipID);

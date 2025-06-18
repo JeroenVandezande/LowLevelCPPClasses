@@ -28,7 +28,8 @@ add_library(${PROJECT_NAME} LLE_I2C.h LLE_SPI.h LLE_PIO.cpp LLE_PIO.h Devices/PI
         Devices/MotorControllers/TMC5130/TMC5130.cpp
         Devices/MotorControllers/TMC5130/TMC5130_Macros.h
         Devices/MotorControllers/TMC5130/TMC5130_Register.h
-        Devices/MotorControllers/TMC5130/TMC5130_Fields.h)
+        Devices/MotorControllers/TMC5130/TMC5130_Fields.h
+        Devices/MotorControllers/TMC5130/TMC5130_Utils.c)
 
 include(cpm/CPM.cmake)
 

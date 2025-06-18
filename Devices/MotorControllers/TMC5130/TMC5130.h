@@ -75,6 +75,14 @@ public:
    */
   void PeriodicJob(uint32_t elapsedTimeinMs);
 
+  /// Moves the motor for a set period of time
+  /// \param acc Unsigned Acceleration Value
+  /// \param velocity Unsigned Velocity Max. Range +-(2^23-512)
+  /// \param timeInms Time in ms the motor should move
+  /// \param ticksInms Current tick value from the Systick timer or an equivalent 1ms timer
+  void StartTimedConstantVelocity(uint32_t acc, int32_t velocity, uint32_t timeInms, uint32_t ticksInms);
+
+
 private:
   ISPIAccess *_SPIAccess;
   bool _IsInShakePositionA;
