@@ -1,13 +1,239 @@
 #include "TMC5130.h"
-
 #include "TMC5130_Bits.h"
+#include "TMC5130_Fields.h"
 #include "TMC5130_Macros.h"
+#include "TMC5130_Register.h"
 #include "TMC5130_RegisterAccess.h"
-//
-// Created by Jeroe on 2025-06-18.
-//
+
 namespace LowLevelEmbedded::Devices::MotorControllers
 {
+void TMC5130::_writeConfiguration()
+{
+  uint8_t ptr = this->_config->configIndex;
+  const int32_t *settings;
+
+  if (this->_config->state == CONFIG_RESTORE)
+  {
+    settings = this->_config->shadowRegister;
+    // Find the next restorable register
+    while ((ptr < TMC5130_REGISTER_COUNT) &&
+           !TMC_IS_RESTORABLE(this->_registerAccess[ptr]))
+    {
+      ptr++;
+    }
+  }
+  else
+  {
+    settings = this->_registerResetState;
+    // Find the next resettable register
+    while ((ptr < TMC5130_REGISTER_COUNT) &&
+           !TMC_IS_RESETTABLE(this->_registerAccess[ptr]))
+    {
+      ptr++;
+    }
+  }
+
+  if (ptr < TMC5130_REGISTER_COUNT)
+  {
+    _writeInt(ptr, settings[ptr]);
+    ptr++;
+  }
+  else // Finished configuration
+  {
+    this->_config->state = CONFIG_READY;
+  }
+}
+
+/**
+ * Executes periodic operations for the TMC5130 motor driver based on the
+ * current motor state and elapsed time since the last call. Handles tasks such
+ * as state transitions, speed adjustments, and invoking configured callbacks.
+ *
+ * @param elapsedTimeinMs The time elapsed since the last invocation of this
+ * method, in milliseconds.
+ */
+void TMC5130::PeriodicJob(uint32_t elapsedTimeinMs)
+{
+  if (this->_config->state != CONFIG_READY)
+  {
+    _writeConfiguration();
+    return;
+  }
+  volatile int32_t xactual = _readInt(TMC5130_XACTUAL);
+  volatile int32_t rampstatus = _readInt(TMC5130_RAMPSTAT);
+  volatile MotorState_t tempMotorState = this->MotorState;
+  bool switchState = false;
+  switch (tempMotorState)
+  {
+  case msShaking:
+    if (rampstatus & TMC5130_RS_VZERO_MASK) // check if speed is zero.
+    {
+      volatile int32_t timeDelta = elapsedTimeinMs - this->_lastStartTimeInms;
+      if (timeDelta > 1000)
+        timeDelta = 1;
+      float timeError = timeDelta - this->_targetShakeSpeedInms;
+      int32_t speedAdjust = (int32_t)(timeError * this->_shakerIValue);
+      if (abs(speedAdjust) > 2)
+      {
+        int newspeed = this->_lastshakespeed + speedAdjust;
+        if (newspeed > 0)
+        {
+          _writeInt(TMC5130_VMAX, newspeed);
+          this->_lastshakespeed = newspeed;
+        }
+      }
+
+      if (this->_IsInShakePositionA)
+      {
+        _writeInt(TMC5130_XTARGET, this->_ShakePositionB);
+        this->_IsInShakePositionA = false;
+      }
+      else
+      {
+        _writeInt(TMC5130_XTARGET, this->_ShakePositionA);
+        this->_IsInShakePositionA = true;
+      }
+      this->_lastStartTimeInms = elapsedTimeinMs;
+      this->MotorState = msShakingRamp;
+    }
+    break;
+  case msShakingRamp:
+    if (!(rampstatus & TMC5130_RS_VZERO_MASK)) // check if speed is NOT zero
+    {
+      this->MotorState = msShaking;
+      this->_lastStartTimeInms = elapsedTimeinMs;
+    }
+    break;
+  case msIdle:
+    break;
+  case msStopped:
+    _writeInt(TMC5130_TCOOLTHRS, 0);
+    this->MotorState = msIdle;
+    this->LastStoppedPosition = xactual;
+    this->IntReason = irStopped;
+    if (this->SetInterruptCallback) // check if callback was assigned
+    {
+      this->SetInterruptCallback(*this);
+    }
+    break;
+  case msStalled:
+    this->IntReason = irStalled;
+    if (this->SetInterruptCallback) // check if callback was assigned
+    {
+      this->SetInterruptCallback(*this);
+    }
+    this->MotorState = msIdle;
+    break;
+  case msConstantVelocity:
+
+    break;
+  case msConstantVelocityRampingDown:
+    if (rampstatus & TMC5130_RS_VZERO_MASK) // check if speed is zero
+    {
+      this->MotorState = msStopped;
+    }
+    break;
+  case msTrajectory:
+    if (rampstatus & TMC5130_RS_VZERO_MASK) // check if speed is zero and that
+                                            // position is reached.
+    {
+      int32_t delta = this->LastTargetPosition - xactual;
+      if (abs(delta) < 10)
+      {
+        _writeInt(TMC5130_XTARGET, xactual);
+        this->MotorState = msStopped;
+      }
+    }
+    break;
+  case msShakingHoming:
+    if (rampstatus & TMC5130_RS_VZERO_MASK) // check if speed is zero.
+    {
+      _writeInt(TMC5130_VMAX, 4000);
+      _writeInt(TMC5130_XTARGET, this->LastStoppedPosition);
+      this->MotorState = msShakingStopping;
+    }
+    break;
+  case msShakingStopping:
+    if (rampstatus & TMC5130_RS_VZERO_MASK) // check if speed is zero.
+    {
+      this->MotorState = msIdle;
+      this->IntReason = irStopped;
+      if (this->SetInterruptCallback) // check if callback was assigned
+      {
+        this->SetInterruptCallback(*this);
+      }
+    }
+    break;
+  case msTimedConstantVelocityRampUp:
+    if (rampstatus & TMC5130_RS_VELREACHED_MASK) // check if speed is reached.
+    {
+      this->MotorState = msTimedConstantVelocity;
+      int32_t drv_stat = _readInt(TMC5130_DRVSTATUS);
+      this->_Prev_SG_Result = (drv_stat & TMC5130_SG_RESULT_MASK);
+    }
+    break;
+  case msTimedConstantVelocity:
+    if ((elapsedTimeinMs - this->_lastStartTimeInms) >=
+        this->_targetMoveTimeInms)
+    {
+      _writeInt(TMC5130_AMAX, 65535);
+      _writeInt(TMC5130_VMAX, 0);
+      this->MotorState = msStopped;
+    }
+    else
+    {
+      int32_t drv_stat = _readInt(TMC5130_DRVSTATUS);
+      uint16_t sg_result = (drv_stat & TMC5130_SG_RESULT_MASK);
+      uint16_t sg_result_prev = this->_Prev_SG_Result;
+      if (sg_result < (sg_result_prev / this->StallguardDivider))
+      {
+        _writeInt(TMC5130_AMAX, 65535);
+        _writeInt(TMC5130_VMAX, 0);
+        this->MotorState = msStopped;
+      }
+      else
+      {
+        if (sg_result > sg_result_prev)
+        {
+          this->_Prev_SG_Result = sg_result;
+        }
+      }
+    }
+    break;
+  case msConstantVelocityUntilSwitch:
+    switch (this->_stopSwitchID)
+    {
+    case 0:
+      switchState = ((rampstatus & STOPSWITCH0MASK) != 0);
+      break;
+    case 1:
+      switchState = ((rampstatus & STOPSWITCH1MASK) != 0);
+      break;
+    case 254: // Custom Callback!
+      switchState = this->GetCustomHomeSwitchActuatedCallback(*this);
+      break;
+    }
+    if (this->_stopSwitchInverted)
+    {
+      if (!switchState)
+      {
+        _writeInt(TMC5130_AMAX, 65535);
+        _writeInt(TMC5130_VMAX, 0);
+        this->MotorState = msStopped;
+      }
+    }
+    else
+    {
+      if (switchState)
+      {
+        _writeInt(TMC5130_AMAX, 65535);
+        _writeInt(TMC5130_VMAX, 0);
+        this->MotorState = msStopped;
+      }
+    }
+    break;
+  }
+}
 
 // Register access permissions:
 //   0x00: none (reserved)

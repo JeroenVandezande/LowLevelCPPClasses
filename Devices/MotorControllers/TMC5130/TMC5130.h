@@ -38,7 +38,10 @@ typedef enum
 class TMC5130
 {
 public:
-  std::function<void(TMC5130 &, MotorIntReason_t)> SetInterruptCallback;
+  static const int STOPSWITCH0MASK = 1;
+  static const int STOPSWITCH1MASK = 2;
+
+  std::function<void(TMC5130 &)> SetInterruptCallback;
   std::function<bool(TMC5130 &)> GetCustomHomeSwitchActuatedCallback;
 
   uint8_t ChipID;
@@ -61,6 +64,16 @@ public:
 
   // Reset the TMC5130.
   bool Reset();
+
+  /**
+   * Performs periodic maintenance and control updates for the TMC5130 motor
+   * driver. This function must be called regularly to handle tasks such as
+   * state management and trajectory updates.
+   *
+   * @param elapsedTimeinMs The time in milliseconds since the last invocation
+   * of the periodic job.
+   */
+  void PeriodicJob(uint32_t elapsedTimeinMs);
 
 private:
   ISPIAccess *_SPIAccess;
@@ -85,6 +98,7 @@ private:
                       uint8_t x4);
   void _writeInt(uint8_t address, int32_t value);
   int32_t _readInt(uint8_t address);
+  void _writeConfiguration();
 };
 
 } // namespace LowLevelEmbedded::Devices::MotorControllers
