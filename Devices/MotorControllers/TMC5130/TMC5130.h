@@ -19,10 +19,6 @@ typedef enum
   msConstantVelocityRampingDown,
   msTrajectory,
   msStalled,
-  msShaking,
-  msShakingRamp,
-  msShakingHoming,
-  msShakingStopping,
   msTimedConstantVelocity,
   msConstantVelocityUntilSwitch,
   msTimedConstantVelocityRampUp
@@ -47,7 +43,6 @@ public:
   uint8_t ChipID;
   uint16_t IdleMotorCurrent;
   uint16_t MoveMotorCurrent;
-  uint16_t ShakeMotorCurrent;
   MotorIntReason_t IntReason;
   MotorState_t MotorState;
   int32_t LastStoppedPosition;
@@ -75,29 +70,98 @@ public:
    */
   void PeriodicJob(uint32_t elapsedTimeinMs);
 
-  /// Moves the motor for a set period of time
-  /// \param acc Unsigned Acceleration Value
-  /// \param velocity Unsigned Velocity Max. Range +-(2^23-512)
-  /// \param timeInms Time in ms the motor should move
-  /// \param ticksInms Current tick value from the Systick timer or an equivalent 1ms timer
+  /**
+   * Initiates a timed movement in constant velocity mode for the TMC5130 motor
+   * driver with specified acceleration, velocity, and duration. This function
+   * configures motor parameters such as current, velocity, acceleration, and
+   * direction, and sets the motor to begin moving based on these settings.
+   *
+   * @param acc The acceleration value for the movement, in appropriate motor
+   * units.
+   * @param velocity The target velocity for the movement, in pulses per second.
+   *        Positive or negative values determine the direction.
+   * @param timeInms The duration for which the motor should maintain the
+   * constant velocity, in milliseconds.
+   * @param ticksInms The system tick value in milliseconds at the start of the
+   * movement.
+   */
   void StartTimedConstantVelocity(uint32_t acc, int32_t velocity, uint32_t timeInms, uint32_t ticksInms);
 
+  /**
+   * Starts the motor movement in a constant velocity mode with the specified
+   * acceleration and velocity. This function sets up the motor parameters such
+   * as acceleration, velocity, and motion direction, as well as enabling
+   * StallGuard for monitoring. The motor state is updated accordingly.
+   *
+   * @param acc The acceleration value in PPS (Pulses Per Second), which
+   * determines the rate of change of velocity.
+   * @param velocity The target velocity in PPS. The sign of this value dictates
+   * the direction of motion (positive for forward, negative for reverse).
+   */
+  void StartConstantVelocity(int32_t acc, int32_t velocity);
+
+  /**
+   * Initiates a motor movement towards a switch with the specified switch ID
+   * and polarity, using the provided acceleration and velocity parameters. The
+   * motor will stop once the designated switch is activated. This function is
+   * typically used for homing operations where the position is referenced by
+   * trigger switches.
+   *
+   * @param switchId The ID of the switch to be targeted. Must correspond to a
+   * valid switch identifier recognized by the motor controller. (254 = custom switch)
+   * @param polarity The polarity of the switch, indicating whether the switch
+   * is triggered on a high or low signal.
+   * @param acc The acceleration for the movement in pulses per second squared,
+   * determining how quickly the motor reaches the set velocity.
+   * @param velocity The target velocity for the movement in pulses per second.
+   * The sign of this value determines the direction of movement.
+   */
+  void StartMoveUntilSwitch(uint8_t switchId, bool polarity, int32_t acc, int32_t velocity);
+
+  /**
+   * Stops the movement of the TMC5130 motor immediately. This function halts
+   * any ongoing motion and updates the motor's state to reflect the stopped
+   * condition. It ensures that the motor is brought to a controlled stop while
+   * maintaining the internal state consistency.
+   */
+  void StopMovement();
+
+  /**
+   * Moves the TMC5130 motor to a specified position using the given motion
+   * parameters for acceleration, maximum speed, and deceleration. This function
+   * plans and executes the motion while ensuring adherence to the provided
+   * constraints.
+   *
+   * @param position The target position for the motor, expressed in encoder
+   * units or microsteps, depending on the system configuration.
+   * @param acc The acceleration rate for reaching the target speed, expressed
+   * in pulses per second squared.
+   * @param speedMax The maximum speed allowed during the movement, in pulses
+   * per second.
+   * @param dec The deceleration rate for stopping smoothly at the target
+   * position, in pulses per second squared.
+   */
+  void MoveToPosition(int32_t position, int32_t acc, int32_t speedMax, int32_t dec);
+
+  /// Sets the Idle current scaling factor
+  /// \param instance a pointer to the instance struct
+  /// \param idleCurrent a value between 0 and 31, where 31 is full scale current
+  /// \param moveCurrent a value between 0 and 31, where 31 is full scale current
+  void SetDigitalCurrentControls(struct TMC5130_t* instance, uint8 idleCurrent, uint8_t moveCurrent, uint8_t moveCurrentShaker);
+
+  // Sets the Idle current scaling factor
+  /// \param instance a pointer to the instance struct
+  /// \param powerDownInmS sets the delay time after stand still of the motor to motor current power down. in mS.
+  void SetDigitalCurrentPowerDown(struct TMC5130_t* instance, uint16_t powerDownInmS);
 
 private:
   ISPIAccess *_SPIAccess;
-  bool _IsInShakePositionA;
   uint8_t _stopSwitchID;
   bool _stopSwitchInverted;
-  int32_t _ShakePositionA;
-  int32_t _ShakePositionB;
-  int32_t _targetShakeSpeedInms;
   int32_t _lastStartTimeInms;
-  int32_t _lastshakespeed;
   int32_t _targetMoveTimeInms;
   int32_t _IHOLD_IRUN_NORMAL;
-  int32_t _IHOLD_IRUN_SHAKER;
   uint16_t _Prev_SG_Result;
-  float _shakerIValue;
   ConfigurationTypeDef *_config = nullptr;
   int32_t _registerResetState[TMC5130_REGISTER_COUNT] = {};
   uint8_t _registerAccess[TMC5130_REGISTER_COUNT] = {};

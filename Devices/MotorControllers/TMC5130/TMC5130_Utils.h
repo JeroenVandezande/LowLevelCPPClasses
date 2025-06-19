@@ -13,8 +13,8 @@ extern "C"
 #endif
 
 int32_t RPMToTStep(float aRPM);
-uint32_t SpeedPPSToMotorUnits(uint32_t aPPS);
-uint32_t AccDecPPSToMotorUnits(uint32_t aPPS);
+int32_t SpeedPPSToMotorUnits(int32_t aPPS);
+int32_t AccDecPPSToMotorUnits(int32_t aPPS);
 uint32_t mSToMotorUnits(uint16_t aTimeInmS);
 
 #ifdef __cplusplus

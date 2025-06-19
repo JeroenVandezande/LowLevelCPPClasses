@@ -11,14 +11,14 @@
 #define ACC_DEC_TIME_REFERENCE 0.00858993
 
 
-inline uint32_t SpeedPPSToMotorUnits(uint32_t aPPS)
+inline int32_t SpeedPPSToMotorUnits(int32_t aPPS)
 {
-	return (uint32_t) round((float)aPPS * VELOCITY_TIME_REFERENCE);
+	return (int32_t) round((float)aPPS * VELOCITY_TIME_REFERENCE);
 }
 
-inline uint32_t AccDecPPSToMotorUnits(uint32_t aPPS)
+inline int32_t AccDecPPSToMotorUnits(int32_t aPPS)
 {
-	return (uint32_t) round((float)aPPS * ACC_DEC_TIME_REFERENCE);
+	return (int32_t) round((float)aPPS * ACC_DEC_TIME_REFERENCE);
 }
 
 inline int32_t RPMToTStep(float aRPM)
