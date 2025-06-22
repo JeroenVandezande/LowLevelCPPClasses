@@ -34,6 +34,8 @@ add_library(${PROJECT_NAME} LLE_I2C.h LLE_SPI.h LLE_PIO.cpp LLE_PIO.h Devices/PI
         Devices/MotorControllers/TMC5130/TMC5130_API_Header.h
         Devices/MotorControllers/TMC5130/TMC5130_CRC.c
         LLE_Analog.h
+        Devices/I2CMultiplexers/TCA9548A.cpp
+        Devices/I2CMultiplexers/TCA9548A.h
 )
 
 include(cpm/CPM.cmake)

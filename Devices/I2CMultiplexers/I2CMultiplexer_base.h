@@ -53,9 +53,10 @@ protected:
    * @param channel The channel number to switch to on the multiplexer.
    */
   virtual void SwitchMultiplexerChannel(uint8_t channel) = 0;
+    friend class I2CMultiplexer_channel;
+    II2CAccess *_I2CAccess;
 private:
   friend class I2CMultiplexer_channel;
-  II2CAccess *_I2CAccess;
   int16_t _multiplexerchannel = -1;
 };
 
