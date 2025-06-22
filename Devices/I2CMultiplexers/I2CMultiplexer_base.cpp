@@ -7,6 +7,11 @@
 namespace LowLevelEmbedded::Devices::I2CMultiplexers
 {
 
+I2CMultiplexer_channel *I2CMultiplexer_base::CreateChannel(uint8_t channel)
+{
+  return new I2CMultiplexer_channel(this, channel);
+}
+
 bool I2CMultiplexer_channel::I2C_WriteMethod(uint8_t address, uint8_t *data, size_t length)
 {
   if (_channelnumber != _parent->_multiplexerchannel)
