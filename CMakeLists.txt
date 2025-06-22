@@ -19,7 +19,8 @@ add_library(${PROJECT_NAME} LLE_I2C.h LLE_SPI.h LLE_PIO.cpp LLE_PIO.h Devices/PI
         Devices/Thermopiles/TSD305.cpp
         Devices/Thermopiles/TSD305.h
         Devices/Thermopiles/TSD305_Constants.h
-       Logging/RTTLogAppenders.h
+        Logging/RTTLogAppenders.h
+        Logging/RTTLogAppenders.c
         Segger_RTT/SEGGER_RTT.c
         Segger_RTT/SEGGER_RTT.h
         Devices/MotorControllers/TMC5130/TMC5130.h
@@ -31,13 +32,19 @@ add_library(${PROJECT_NAME} LLE_I2C.h LLE_SPI.h LLE_PIO.cpp LLE_PIO.h Devices/PI
         Devices/MotorControllers/TMC5130/TMC5130_Fields.h
         Devices/MotorControllers/TMC5130/TMC5130_Utils.c
         Devices/MotorControllers/TMC5130/TMC5130_API_Header.h
-        Devices/MotorControllers/TMC5130/TMC5130_CRC.c)
+        Devices/MotorControllers/TMC5130/TMC5130_CRC.c
+        LLE_Analog.h
+)
 
 include(cpm/CPM.cmake)
+CPMAddPackage("gh:an-dr/microlog@6.4.5")
 
-CPMAddPackage("gh:an-dr/microlog@6.4.3")
+target_compile_definitions( microlog
+        INTERFACE
+        ULOG_EXTRA_OUTPUTS=1
+        FEATURE_COLOR=1)
 
-target_link_libraries(${PROJECT_NAME} microlog)
+target_link_libraries(${PROJECT_NAME} PUBLIC microlog)
 
-target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} Segger_RTT Logging Devices/PIOs Devices/FanControllers Devices/LEDControllers Devices/DACs Devices/ADCs Devices/EEProms)
+target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} Segger_RTT Logging Devices/PIOs Devices/FanControllers Devices/LEDControllers Devices/DACs Devices/ADCs Devices/EEProms Devices/MotorControllers/TMC5130)
 

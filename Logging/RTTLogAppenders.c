@@ -1,6 +1,5 @@
-#include RTTLogAppenders.h
+#include "RTTLogAppenders.h"
 #include "SEGGER_RTT.h"
-
 #include <ulog.h>
 
 void resetColor() { SEGGER_RTT_WriteString(0, "\x1B[0m\x1B[0K"); }
@@ -43,6 +42,7 @@ void MicrologAnsiColorRTTOutput_callback(ulog_Event *ev, void *arg)
   {
     setColor(ev->level);
     SEGGER_RTT_WriteString(0, buffer);
+    SEGGER_RTT_WriteString(0, "\n");
     resetColor();
   }
 }

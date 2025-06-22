@@ -6,10 +6,43 @@
 #include "TMC5130_RegisterAccess.h"
 #include "TMC5130_Utils.h"
 
+#include <cmath>
 #include <ulog.h>
 
 namespace LowLevelEmbedded::Devices::MotorControllers
 {
+
+TMC5130::TMC5130(ISPIAccess *spiAccess) { this->_SPIAccess = spiAccess; }
+
+void TMC5130::StopMovement()
+{
+  _writeInt(TMC5130_VMAX, 0);
+  this->MotorState = msConstantVelocityRampingDown;
+}
+
+void TMC5130::StopMovement(int32_t dec)
+{
+  log_info("TMC5130: Stopping");
+  _writeInt(TMC5130_VMAX, 0);
+  _writeInt(TMC5130_AMAX, AccDecPPSToMotorUnits(dec));
+  this->MotorState = msConstantVelocityRampingDown;
+}
+
+void TMC5130::MoveToPosition(int32_t position, int32_t acc, int32_t speedMax,
+                             int32_t dec)
+{
+  log_info("TMC5130: Moving to position %ld with acc=%ld, speed=%ld, dec=%ld",
+           position, acc, speedMax, dec);
+  // Set Current for Motor
+  _activateMoveCurrent();
+  _writeInt(TMC5130_RAMPMODE, TMC5130_MODE_POSITION);
+  _writeInt(TMC5130_VMAX, SpeedPPSToMotorUnits(speedMax));
+  _writeInt(TMC5130_AMAX, AccDecPPSToMotorUnits(acc));
+  _writeInt(TMC5130_DMAX, AccDecPPSToMotorUnits(dec));
+  _writeInt(TMC5130_XTARGET, position);
+  this->LastTargetPosition = position;
+  this->MotorState = msTrajectory;
+}
 
 void TMC5130::StartMoveUntilSwitch(uint8_t switchId, bool polarity, int32_t acc,
                                    int32_t velocity)
@@ -23,7 +56,7 @@ void TMC5130::StartMoveUntilSwitch(uint8_t switchId, bool polarity, int32_t acc,
   }
 
   // Set Current for Motor
-  _writeInt(TMC5130_IHOLD_IRUN, this->_IHOLD_IRUN_NORMAL);
+  _activateMoveCurrent();
   this->_stopSwitchID = switchId;
   this->_stopSwitchInverted = !polarity;
   // Set absolute velocity
@@ -37,17 +70,18 @@ void TMC5130::StartMoveUntilSwitch(uint8_t switchId, bool polarity, int32_t acc,
 
 void TMC5130::StartConstantVelocity(int32_t acc, int32_t velocity)
 {
+  log_info(
+      "TMC5130: Starting constant velocity motion with acc=%ld, velocity=%ld",
+      acc, velocity);
   // Set Current for Motor
-  _writeInt(TMC5130_IHOLD_IRUN, this->_IHOLD_IRUN_NORMAL);
+  _activateRampUpCurrent();
   // Set absolute velocity
   _writeInt(TMC5130_VMAX, SpeedPPSToMotorUnits(abs(velocity)));
   _writeInt(TMC5130_AMAX, AccDecPPSToMotorUnits(acc));
-  // Set StallGuard On
-  _writeInt(TMC5130_TCOOLTHRS, 1048570);
   // Set direction
   _writeInt(TMC5130_RAMPMODE,
             (velocity >= 0) ? TMC5130_MODE_VELPOS : TMC5130_MODE_VELNEG);
-  this->MotorState = msConstantVelocity;
+  this->MotorState = msConstantVelocityRampUp;
 }
 
 /**
@@ -71,12 +105,10 @@ void TMC5130::StartTimedConstantVelocity(uint32_t acc, int32_t velocity,
   this->_lastStartTimeInms = ticksInms;
   this->_targetMoveTimeInms = timeInms;
   // Set Current for Motor
-  _writeInt(TMC5130_IHOLD_IRUN, this->_IHOLD_IRUN_NORMAL);
+  _activateRampUpCurrent();
   // Set absolute velocity
   _writeInt(TMC5130_VMAX, SpeedPPSToMotorUnits(abs(velocity)));
   _writeInt(TMC5130_AMAX, AccDecPPSToMotorUnits(acc));
-  // Set StallGuard On
-  _writeInt(TMC5130_TCOOLTHRS, 1048570);
   // Set direction
   _writeInt(TMC5130_RAMPMODE,
             (velocity >= 0) ? TMC5130_MODE_VELPOS : TMC5130_MODE_VELNEG);
@@ -98,7 +130,7 @@ void TMC5130::StartTimedConstantVelocity(uint32_t acc, int32_t velocity,
  */
 void TMC5130::_writeConfiguration()
 {
-  log_debug("TMC5130 #%d: Writing configuration", ChipID);
+  log_info("TMC5130 #%d: Writing configuration", ChipID);
   uint8_t ptr = this->_config->configIndex;
   const int32_t *settings;
 
@@ -160,7 +192,7 @@ void TMC5130::PeriodicJob(uint32_t elapsedTimeinMs)
     // do nothing
     break;
   case msStopped:
-    _writeInt(TMC5130_TCOOLTHRS, 0);
+    _activateIdleCurrent();
     this->MotorState = msIdle;
     this->LastStoppedPosition = xactual;
     this->IntReason = irStopped;
@@ -170,6 +202,7 @@ void TMC5130::PeriodicJob(uint32_t elapsedTimeinMs)
     }
     break;
   case msStalled:
+    _activateIdleCurrent();
     this->IntReason = irStalled;
     if (this->SetInterruptCallback) // check if callback was assigned
     {
@@ -186,7 +219,7 @@ void TMC5130::PeriodicJob(uint32_t elapsedTimeinMs)
     break;
   case msTrajectory:
     if (rampstatus & TMC5130_RS_VZERO_MASK) // check if speed is zero and that
-                                            // position is reached.
+    // position is reached.
     {
       int32_t delta = this->LastTargetPosition - xactual;
       if (abs(delta) < 10)
@@ -196,12 +229,18 @@ void TMC5130::PeriodicJob(uint32_t elapsedTimeinMs)
       }
     }
     break;
+  case msConstantVelocityRampUp:
+    if (rampstatus & TMC5130_RS_VELREACHED_MASK) // check if speed is reached.
+    {
+      this->MotorState = msConstantVelocity;
+      _activateMoveCurrent();
+    }
+    break;
   case msTimedConstantVelocityRampUp:
     if (rampstatus & TMC5130_RS_VELREACHED_MASK) // check if speed is reached.
     {
       this->MotorState = msTimedConstantVelocity;
-      int32_t drv_stat = _readInt(TMC5130_DRVSTATUS);
-      this->_Prev_SG_Result = (drv_stat & TMC5130_SG_RESULT_MASK);
+      _activateMoveCurrent();
     }
     break;
   case msTimedConstantVelocity:
@@ -211,27 +250,6 @@ void TMC5130::PeriodicJob(uint32_t elapsedTimeinMs)
       _writeInt(TMC5130_AMAX, 65535);
       _writeInt(TMC5130_VMAX, 0);
       this->MotorState = msStopped;
-    }
-    else
-    {
-      int32_t drv_stat = _readInt(TMC5130_DRVSTATUS);
-      uint16_t sg_result = (drv_stat & TMC5130_SG_RESULT_MASK);
-      uint16_t sg_result_prev = this->_Prev_SG_Result;
-      if (sg_result < (sg_result_prev / this->StallguardDivider))
-      {
-        log_warn("TMC5130 #%d: Motor stall detected! SG_RESULT=%u", ChipID,
-                 _Prev_SG_Result);
-        _writeInt(TMC5130_AMAX, 65535);
-        _writeInt(TMC5130_VMAX, 0);
-        this->MotorState = msStopped;
-      }
-      else
-      {
-        if (sg_result > sg_result_prev)
-        {
-          this->_Prev_SG_Result = sg_result;
-        }
-      }
     }
     break;
   case msConstantVelocityUntilSwitch:
@@ -414,6 +432,77 @@ void TMC5130::_writeInt(uint8_t address, int32_t value)
 {
   _writeDatagram(address, BYTE(value, 3), BYTE(value, 2), BYTE(value, 1),
                  BYTE(value, 0));
+}
+
+#define ONE_OVER_SQRT_OF_TWO 0.70711f
+
+inline float calculate_full_scale_current(float senseResistorValue, float Vfs)
+{
+  return ((Vfs / (senseResistorValue + 0.02)) * ONE_OVER_SQRT_OF_TWO) * 1000.0;
+}
+
+inline uint16_t CalculateDigitalCurrent(uint16_t currentInmA,
+                                        float senseResistorValue, float Vfs)
+{
+  float fullScaleCurrentInmA = calculate_full_scale_current(senseResistorValue, Vfs);
+  return (uint16_t)roundf((currentInmA * 32) / fullScaleCurrentInmA) - 1;
+}
+
+inline float CalculateAnalogCurrentVoltage(uint16_t currentInmA,
+                                           float senseResistorValue, float Vfs)
+{
+  float fullScaleCurrentInmA = calculate_full_scale_current(senseResistorValue, Vfs);
+  return (2.5 / fullScaleCurrentInmA) * currentInmA;
+}
+
+bool TMC5130::_activate_current(uint16_t current_in_mA)
+{
+  if (this->SenseResistorInOhms == 0)
+  {
+    log_error("Sense Resistor is not defined");
+    return false;
+  }
+
+  int32_t chopConf = _readInt(TMC5130_CHOPCONF);
+  float Vfs = 0.32;
+  if ((chopConf & TMC5130_VSENSE_MASK) > 0)
+  {
+    Vfs = 0.18;
+  }
+
+  if (this->CurrentSetVoltageChannel)
+  {
+    this->CurrentSetVoltageChannel->WriteDACVoltage(
+        CalculateAnalogCurrentVoltage(current_in_mA,
+                                      SenseResistorInOhms, Vfs));
+  }
+  else
+  {
+    int32_t value =
+        4 << 16; // 4 is a good IHOLDDELAY value for most cases, this will do a
+                 // smooth transition from move to idle current
+    value |= (CalculateDigitalCurrent(current_in_mA,
+                                      SenseResistorInOhms, Vfs)
+              << 8);
+    value |= CalculateDigitalCurrent(Motor_Idle_CurrentInmA,
+                                     SenseResistorInOhms, Vfs);
+    _writeInt(TMC5130_IHOLD_IRUN, value);
+  }
+  return true;
+}
+void TMC5130::_activateIdleCurrent()
+{
+  _activate_current(Motor_Idle_CurrentInmA);
+}
+
+void TMC5130::_activateRampUpCurrent()
+{
+  _activate_current(Motor_RampUp_CurrentInmA);
+}
+
+void TMC5130::_activateMoveCurrent()
+{
+  _activate_current(Motor_FullSpeed_CurrentInmA);
 }
 
 } // namespace LowLevelEmbedded::Devices::MotorControllers
