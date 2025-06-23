@@ -131,34 +131,34 @@ void TMC5130::StartTimedConstantVelocity(uint32_t acc, int32_t velocity,
 void TMC5130::_writeConfiguration()
 {
   log_info("TMC5130 #%d: Writing configuration", ChipID);
-  uint8_t ptr = this->_config->configIndex;
+  uint8_t *ptr = &(this->_config->configIndex);
   const int32_t *settings;
 
   if (this->_config->state == CONFIG_RESTORE)
   {
     settings = this->_config->shadowRegister;
     // Find the next restorable register
-    while ((ptr < TMC5130_REGISTER_COUNT) &&
-           !TMC_IS_RESTORABLE(this->_registerAccess[ptr]))
+    while ((*ptr < TMC5130_REGISTER_COUNT) &&
+           !TMC_IS_RESTORABLE(this->_registerAccess[*ptr]))
     {
-      ptr++;
+      (*ptr)++;
     }
   }
   else
   {
     settings = this->_registerResetState;
     // Find the next resettable register
-    while ((ptr < TMC5130_REGISTER_COUNT) &&
-           !TMC_IS_RESETTABLE(this->_registerAccess[ptr]))
+    while ((*ptr < TMC5130_REGISTER_COUNT) &&
+           !TMC_IS_RESETTABLE(this->_registerAccess[*ptr]))
     {
-      ptr++;
+      (*ptr)++;
     }
   }
 
-  if (ptr < TMC5130_REGISTER_COUNT)
+  if (*ptr < TMC5130_REGISTER_COUNT)
   {
-    _writeInt(ptr, settings[ptr]);
-    ptr++;
+    _writeInt(*ptr, settings[*ptr]);
+    (*ptr)++;
   }
   else // Finished configuration
   {
@@ -493,16 +493,19 @@ bool TMC5130::_activate_current(uint16_t current_in_mA)
 void TMC5130::_activateIdleCurrent()
 {
   _activate_current(Motor_Idle_CurrentInmA);
+  log_info("Motor Current Set to %d mA", Motor_Idle_CurrentInmA);
 }
 
 void TMC5130::_activateRampUpCurrent()
 {
   _activate_current(Motor_RampUp_CurrentInmA);
+  log_info("Motor Current Set to %d mA", Motor_RampUp_CurrentInmA);
 }
 
 void TMC5130::_activateMoveCurrent()
 {
   _activate_current(Motor_FullSpeed_CurrentInmA);
+  log_info("Motor Current Set to %d mA", Motor_FullSpeed_CurrentInmA);
 }
 
 } // namespace LowLevelEmbedded::Devices::MotorControllers
