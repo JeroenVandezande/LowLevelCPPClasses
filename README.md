@@ -8,8 +8,29 @@ Current Generic Interfaces:
 * I2C
 * 8-Bit I/O Expander
 * Basic IO Pins
+* I2C Muliplexer
 
 Current Device Implementations
 
-* 8-Bit I/O Expanders:
+* **ADCs**:
+	* AD7175
+* **DACs**:
+	* DAC7578
+* **EEProms**:
+	* 24AA08
+* **Encoders**:
+	* AS5311
+* **Fan Controllers**:
+	* MAX31790
+* **I2C Muxs**:
+	* TCA9548A
+* **Led Controller**:
+	* PCA9685
+* **Motor Controller**:
+	* TMC5130
+* **Thermopiles**
+	* MLX90614
+	* TSD305
+* **8-Bit I/O Expanders**:
 	* MCP23S08
+	* PCA6408

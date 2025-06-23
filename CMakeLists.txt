@@ -16,9 +16,11 @@ add_library(${PROJECT_NAME} LLE_I2C.h LLE_SPI.h LLE_PIO.cpp LLE_PIO.h Devices/PI
         Devices/PIOs/PCA6408.h
         Devices/EEProms/EEProm24AA08.cpp
         Devices/EEProms/EEProm24AA08.h
-        Devices/Thermopiles/TSD305.cpp
-        Devices/Thermopiles/TSD305.h
-        Devices/Thermopiles/TSD305_Constants.h
+        Devices/Thermopiles/TSD305/TSD305.cpp
+        Devices/Thermopiles/TSD305/TSD305.h
+        Devices/Thermopiles/TSD305/TSD305_Constants.h
+        Devices/Thermopiles/MLX90614/MLX90614.cpp
+        Devices/Thermopiles/MLX90614/MLX90614.h
         Logging/RTTLogAppenders.h
         Logging/RTTLogAppenders.c
         Segger_RTT/SEGGER_RTT.c
@@ -48,5 +50,6 @@ target_compile_definitions( microlog
 
 target_link_libraries(${PROJECT_NAME} PUBLIC microlog)
 
-target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} Segger_RTT Logging Devices/PIOs Devices/FanControllers Devices/LEDControllers Devices/DACs Devices/ADCs Devices/EEProms Devices/MotorControllers/TMC5130)
+target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} Segger_RTT Logging Devices/PIOs Devices/FanControllers Devices/LEDControllers Devices/DACs Devices/ADCs Devices/EEProms Devices/MotorControllers/TMC5130 Devices/Thermopiles/MLX90614
+Devices/Thermopiles/TSD305)
 
