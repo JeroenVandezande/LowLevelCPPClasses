@@ -24,16 +24,4 @@ typedef enum {
 	CONFIG_RESTORE
 } ConfigState;
 
-// structure for configuration mechanism
-typedef struct
-{
-	ConfigState          state;
-	uint8_t                configIndex;
-	int32_t                shadowRegister[TMC_REGISTER_COUNT];
-	uint8_t (*reset)       (void);
-	uint8_t (*restore)     (void);
-        //TODO
-	//tmc_callback_config  callback;
-} ConfigurationTypeDef;
-
 #endif /* TMC_HELPERS_CONFIG_H_ */

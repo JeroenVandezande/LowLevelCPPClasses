@@ -46,6 +46,7 @@ namespace LowLevelEmbedded::Devices::MotorControllers
          * to respond to interrupts based on their specific application needs.
          */
         std::function<void(TMC5130&)> SetInterruptCallback;
+
         /**
          * @brief A callback function used to determine if a custom home switch has been actuated.
          *
@@ -55,7 +56,7 @@ namespace LowLevelEmbedded::Devices::MotorControllers
          *
          * The function should return `true` if the switch is triggered, and `false` otherwise.
          */
-        std::function<bool(TMC5130&)> GetCustomHomeSwitchActuatedCallback;
+       std::function<bool(TMC5130&)> GetCustomHomeSwitchActuatedCallback;
 
         uint8_t ChipID;
         MotorIntReason_t IntReason;
@@ -70,10 +71,9 @@ namespace LowLevelEmbedded::Devices::MotorControllers
 
         // Initialize a TMC5130 IC.
         // This function requires:
-        //     - config: A ConfigurationTypeDef struct, which will be used by the IC
         //     - registerResetState: An int32_t array with 128 elements. This holds
         //     the values to be used for a reset.
-        void Init(ConfigurationTypeDef* config, const int32_t* registerResetState);
+        void Init(const int32_t* registerResetState);
 
         // Reset the TMC5130.
         bool Reset();
@@ -176,9 +176,14 @@ namespace LowLevelEmbedded::Devices::MotorControllers
         bool _stopSwitchInverted;
         int32_t _lastStartTimeInms;
         int32_t _targetMoveTimeInms;
-        ConfigurationTypeDef* _config = nullptr;
         int32_t _registerResetState[TMC5130_REGISTER_COUNT] = {};
         uint8_t _registerAccess[TMC5130_REGISTER_COUNT] = {};
+        int32_t _shadowRegister[TMC5130_REGISTER_COUNT] = {};
+        ConfigState _configState = CONFIG_READY;
+        uint8_t _configIndex = 0;
+        //uint8_t (*_resetCallback)(void) = nullptr;
+        //uint8_t (*_restoreCallback)(void) = nullptr;
+
 
         void _writeDatagram(uint8_t address, uint8_t x1, uint8_t x2, uint8_t x3, uint8_t x4);
         void _writeInt(uint8_t address, int32_t value);

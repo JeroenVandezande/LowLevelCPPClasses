@@ -131,12 +131,12 @@ void TMC5130::StartTimedConstantVelocity(uint32_t acc, int32_t velocity,
 void TMC5130::_writeConfiguration()
 {
   log_info("TMC5130 #%d: Writing configuration", ChipID);
-  uint8_t *ptr = &(this->_config->configIndex);
+  uint8_t *ptr = &(this->_configIndex);
   const int32_t *settings;
 
-  if (this->_config->state == CONFIG_RESTORE)
+  if (this->_configState == CONFIG_RESTORE)
   {
-    settings = this->_config->shadowRegister;
+    settings = this->_shadowRegister;
     // Find the next restorable register
     while ((*ptr < TMC5130_REGISTER_COUNT) &&
            !TMC_IS_RESTORABLE(this->_registerAccess[*ptr]))
@@ -162,7 +162,7 @@ void TMC5130::_writeConfiguration()
   }
   else // Finished configuration
   {
-    this->_config->state = CONFIG_READY;
+    this->_configState = CONFIG_READY;
   }
 }
 
@@ -176,11 +176,12 @@ void TMC5130::_writeConfiguration()
  */
 void TMC5130::PeriodicJob(uint32_t elapsedTimeinMs)
 {
-  if (this->_config->state != CONFIG_READY)
+  if (this->_configState != CONFIG_READY)
   {
     _writeConfiguration();
     return;
   }
+
   volatile int32_t xactual = _readInt(TMC5130_XACTUAL);
   volatile int32_t rampstatus = _readInt(TMC5130_RAMPSTAT);
   volatile MotorState_t tempMotorState = this->MotorState;
@@ -346,7 +347,7 @@ static const TMCRegisterConstant tmc5130_RegisterConstants[] = {
 bool TMC5130::Reset()
 {
   log_info("TMC5130 #%d: Resetting controller", ChipID);
-  if (this->_config->state != CONFIG_READY)
+  if (this->_configState != CONFIG_READY)
   {
     return false;
   }
@@ -355,11 +356,11 @@ bool TMC5130::Reset()
   for (i = 0; i < TMC5130_REGISTER_COUNT; i++)
   {
     this->_registerAccess[i] &= ~TMC_ACCESS_DIRTY;
-    this->_config->shadowRegister[i] = 0;
+    this->_shadowRegister[i] = 0;
   }
 
-  this->_config->state = CONFIG_RESET;
-  this->_config->configIndex = 0;
+  this->_configState = CONFIG_RESET;
+  this->_configIndex = 0;
 
   bool result = true;
   log_info("TMC5130 #%d: Reset %s", ChipID, result ? "successful" : "failed");
@@ -379,14 +380,10 @@ bool TMC5130::Reset()
  * representing the default reset state for each register, used to initialize
  * shadow registers.
  */
-void TMC5130::Init(ConfigurationTypeDef *config,
-                   const int32_t *registerResetState)
+void TMC5130::Init(const int32_t *registerResetState)
 {
   this->LastStoppedPosition = 0;
   this->MotorState = msIdle;
-  this->_config = config;
-  this->_config->configIndex = 0;
-  this->_config->state = CONFIG_READY;
 
   size_t i;
   for (i = 0; i < TMC5130_REGISTER_COUNT; i++)
@@ -406,7 +403,7 @@ void TMC5130::_writeDatagram(uint8_t address, uint8_t x1, uint8_t x2,
   int32_t value = (x1 << 24) | (x2 << 16) | (x3 << 8) | x4;
   // Write to the shadow register and mark the register dirty
   address = TMC_ADDRESS(address);
-  this->_config->shadowRegister[address] = value;
+  this->_shadowRegister[address] = value;
   this->_registerAccess[address] |= TMC_ACCESS_DIRTY;
 }
 
@@ -416,7 +413,7 @@ int32_t TMC5130::_readInt(uint8_t address)
 
   // register not readable -> shadow register copy
   if (!TMC_IS_READABLE(this->_registerAccess[address]))
-    return this->_config->shadowRegister[address];
+    return this->_shadowRegister[address];
 
   uint8_t data[5] = {0, 0, 0, 0, 0};
 
