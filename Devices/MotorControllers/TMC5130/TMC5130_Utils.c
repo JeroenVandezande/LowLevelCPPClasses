@@ -21,10 +21,16 @@ inline int32_t AccDecPPSToMotorUnits(int32_t aPPS)
 	return (int32_t) round((float)aPPS * ACC_DEC_TIME_REFERENCE);
 }
 
+inline int32_t RPMToPPS(float aRPM, uint32_t stepsPerRevolution)
+{
+  float rps = aRPM / 60.0; //rotations per second
+  float pps = rps * stepsPerRevolution; //steps per round
+  return pps;
+}
+
 inline int32_t RPMToTStep(float aRPM, uint32_t stepsPerRevolution)
 {
-	float rps = aRPM / 60.0; //rotations per second
-	float pps = rps * stepsPerRevolution; //steps per round
+	float pps = RPMToPPS(aRPM, stepsPerRevolution); //steps per round
 	return SpeedPPSToMotorUnits(pps);
 }
 

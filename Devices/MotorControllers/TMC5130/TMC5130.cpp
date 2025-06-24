@@ -23,8 +23,8 @@ void TMC5130::StopMovement()
 void TMC5130::StopMovement(int32_t dec)
 {
   log_info("TMC5130: Stopping");
-  _writeInt(TMC5130_VMAX, 0);
   _writeInt(TMC5130_AMAX, AccDecPPSToMotorUnits(dec));
+  _writeInt(TMC5130_VMAX, 0);
   this->MotorState = msConstantVelocityRampingDown;
 }
 
