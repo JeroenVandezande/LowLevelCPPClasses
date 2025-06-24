@@ -170,7 +170,6 @@ namespace LowLevelEmbedded::Devices::MotorControllers
          */
         void MoveToPosition(int32_t position, int32_t acc, int32_t speedMax, int32_t dec);
 
-
     private:
         ISPIAccess* _SPIAccess;
         uint8_t _stopSwitchID;
