@@ -6,35 +6,40 @@
 
 namespace LowLevelEmbedded {
 
-class MLX90614 {
-public:
-    static constexpr uint8_t DEFAULT_I2C_ADDRESS = 0x5A;
+  namespace Devices
+  {
+    namespace Thermopiles
+    {
+      class MLX90614 {
+      public:
+        static constexpr uint8_t DEFAULT_I2C_ADDRESS = 0xB4;
 
-    enum class RamRegister : uint8_t {
-        Ta     = 0x06,  // Ambient temperature
-        Tobj1  = 0x07,  // Object temperature 1
-        Tobj2  = 0x08   // Object temperature 2 (for dual zone sensors)
-    };
+        enum class RamRegister : uint8_t {
+          Ta     = 0x06,  // Ambient temperature
+          Tobj1  = 0x07,  // Object temperature 1
+          Tobj2  = 0x08   // Object temperature 2 (for dual zone sensors)
+      };
 
-    MLX90614(II2CAccess* i2c, uint8_t address = DEFAULT_I2C_ADDRESS);
+        MLX90614(II2CAccess* i2c, uint8_t address = DEFAULT_I2C_ADDRESS);
 
-    bool ReadTemperature(RamRegister reg, float& temperatureC);
-    bool ReadAmbient(float& temperatureC);
-    bool ReadObject(float& temperatureC);
+        bool ReadTemperature(RamRegister reg, float& temperatureC);
+        bool ReadAmbient(float& temperatureC);
+        bool ReadObject(float& temperatureC);
 
-    /// Set and get emissivity (0.1 … 1.0)
-    bool SetEmissivity(float emissivity);
-    bool GetEmissivity(float &emissivity);
+        /// Set and get emissivity (0.1 … 1.0)
+        bool SetEmissivity(float emissivity);
+        bool GetEmissivity(float &emissivity);
 
-private:
-    II2CAccess* _i2c;
-    uint8_t _address;
+      private:
+        II2CAccess* _i2c;
+        uint8_t _address;
 
-    bool WriteWord(uint8_t reg, uint16_t value);
-    bool ReadWord(uint8_t reg, uint16_t& value);
-    static float ConvertToCelsius(uint16_t raw);
-};
-
+        bool WriteWord(uint8_t reg, uint16_t value);
+        bool ReadWord(uint8_t reg, uint16_t& value);
+        static float ConvertToCelsius(uint16_t raw);
+      };
+    }
+  }
 } // namespace LowLevelEmbedded
 
 #endif // MLX90614_H
