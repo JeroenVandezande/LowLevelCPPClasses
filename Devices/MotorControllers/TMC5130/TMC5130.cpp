@@ -323,15 +323,15 @@ static const uint8_t tmc5130_defaultRegisterAccess[TMC5130_REGISTER_COUNT] = {
 // the values. This only works when the register content is constant.
 static const TMCRegisterConstant tmc5130_RegisterConstants[] = {
     // Use ascending addresses!
-    {0x60, (uint8_t)0xAAAAB554}, // MSLUT[0]
+    {0x60, (int32_t)0xAAAAB554}, // MSLUT[0]
     {0x61, 0x4A9554AA},          // MSLUT[1]
     {0x62, 0x24492929},          // MSLUT[2]
     {0x63, 0x10104222},          // MSLUT[3]
-    {0x64, (uint8_t)0xFBFFFFFF}, // MSLUT[4]
-    {0x65, (uint8_t)0xB5BB777D}, // MSLUT[5]
+    {0x64, (int32_t)0xFBFFFFFF}, // MSLUT[4]
+    {0x65, (int32_t)0xB5BB777D}, // MSLUT[5]
     {0x66, 0x49295556},          // MSLUT[6]
     {0x67, 0x00404222},          // MSLUT[7]
-    {0x68, (uint8_t)0xFFFF8056}, // MSLUTSEL
+    {0x68, (int32_t)0xFFFF8056}, // MSLUTSEL
     {0x69, 0x00F70000},          // MSLUTSTART
     {0x70, 0x00050480}           // PWMCONF
 };

@@ -4,7 +4,7 @@
 
 void MicrologAnsiColorRTTOutput_callback(ulog_Event *ev, void *arg)
 {
-  static char buffer[128];
+  static char buffer[160];
   const int result = ulog_event_to_cstr(ev, buffer, sizeof(buffer));
   if (result == 0)
   {
