@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #include "ulog.h"
-#include "Segger_RTT/SEGGER_RTT.h"
+#include "SEGGER_RTT.h"
 
 void MicrologAnsiColorRTTOutput_callback(ulog_Event *ev, void *arg);
 

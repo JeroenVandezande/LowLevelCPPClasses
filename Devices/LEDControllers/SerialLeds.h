@@ -5,9 +5,9 @@
 #ifndef _SERIALLEDS_H_
 #define _SERIALLEDS_H_
 
-#include <stdint.h>
+#include "../../Base/LLE_SPI.h"
 #include <stddef.h>
-#include "../../LLE_SPI.h"
+#include <stdint.h>
 
 namespace LowLevelEmbedded
 {

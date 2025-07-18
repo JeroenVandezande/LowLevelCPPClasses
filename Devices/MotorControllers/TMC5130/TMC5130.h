@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "LLE_Analog.h"
+#include "../../../Base/LLE_Analog.h"
 #include "LLE_SPI.h"
 #include "TMC5130_Config.h"
 #include <functional>

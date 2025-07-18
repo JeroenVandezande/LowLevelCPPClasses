@@ -5,7 +5,7 @@
 #ifndef PCA6408_H
 #define PCA6408_H
 
-#include "LLE_I2C.h"
+#include "../../Base/LLE_I2C.h"
 
 namespace LowLevelEmbedded
 {

@@ -5,8 +5,8 @@
 #ifndef _MAX31790_H_
 #define _MAX31790_H_
 
+#include "../../Base/LLE_I2C.h"
 #include <stdint.h>
-#include "../../LLE_I2C.h"
 
 namespace LowLevelEmbedded
 {

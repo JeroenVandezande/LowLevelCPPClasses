@@ -5,7 +5,7 @@
 #ifndef PCA9685_H
 #define PCA9685_H
 
-#include "LLE_I2C.h"
+#include "../../Base/LLE_I2C.h"
 
 #define BASE_ADDRESS 0b10000000
 #define CHIPCLK 25000000

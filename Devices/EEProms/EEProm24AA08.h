@@ -9,7 +9,7 @@
 #include <vector>
 #include <stdint.h>
 
-#include "LLE_I2C.h"
+#include "../../Base/LLE_I2C.h"
 
 namespace LowLevelEmbedded::Devices::EEProm
 {

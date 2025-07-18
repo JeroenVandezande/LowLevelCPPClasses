@@ -1,8 +1,8 @@
 #ifndef MCP23S08_LIBRARY_H
 #define MCP23S08_LIBRARY_H
+#include "LLE_SPI.h"
+#include "LLE_PIO.h"
 #include <functional>
-#include "../../LLE_SPI.h"
-#include "../../LLE_PIO.h"
 
 namespace LowLevelEmbedded
 {

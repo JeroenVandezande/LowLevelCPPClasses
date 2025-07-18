@@ -3,9 +3,9 @@
 //
 
 #include "AD7175.h"
+#include "../../Base/LLE_IOPIN.h"
+#include "../../Base/LLE_SPI.h"
 #include "AD7175_Constants.h"
-#include "LLE_IOPIN.h"
-#include "LLE_SPI.h"
 
 namespace LowLevelEmbedded::Devices::ADCs
 {

@@ -8,8 +8,8 @@
 //CRC constants
 #include <functional>
 
-#include "LLE_IOPIN.h"
-#include "LLE_SPI.h"
+#include "../../Base/LLE_IOPIN.h"
+#include "../../Base/LLE_SPI.h"
 
 namespace LowLevelEmbedded
 {

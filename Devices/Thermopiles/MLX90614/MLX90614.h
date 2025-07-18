@@ -1,8 +1,8 @@
 #ifndef MLX90614_H
 #define MLX90614_H
 
+#include "../../../Base/LLE_I2C.h"
 #include <cstdint>
-#include "LLE_I2C.h"
 
 namespace LowLevelEmbedded {
 

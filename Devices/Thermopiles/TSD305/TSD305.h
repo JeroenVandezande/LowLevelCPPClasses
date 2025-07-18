@@ -5,7 +5,7 @@
 #ifndef TSD305_H
 #define TSD305_H
 
-#include "LLE_I2C.h"
+#include "../../../Base/LLE_I2C.h"
 #include "TSD305_Constants.h"
 
 namespace LowLevelEmbedded

@@ -4,7 +4,7 @@
 
 #ifndef I2CMULTIPLEXER_BASE_H
 #define I2CMULTIPLEXER_BASE_H
-#include "LLE_I2C.h"
+#include "../../Base/LLE_I2C.h"
 
 namespace LowLevelEmbedded::Devices::I2CMultiplexers
 {
