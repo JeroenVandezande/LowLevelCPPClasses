@@ -4,7 +4,7 @@
 
 #include "I2CMultiplexer_base.h"
 
-namespace LowLevelEmbedded::Devices::I2CMultiplexers
+namespace LowLevelEmbedded
 {
     I2CMultiplexer_channel* I2CMultiplexer_base::CreateChannel(uint8_t channel)
     {
