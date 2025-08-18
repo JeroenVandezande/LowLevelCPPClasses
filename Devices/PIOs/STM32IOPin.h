@@ -71,8 +71,8 @@ private:
 public:
   STM32IOPin(GPIO_TypeDef *GPIO_Port, uint16_t GPIO_Pin)
   {
-    this->pio = GPIO_Port;
-    this->pin = GPIO_Pin;
+    this->pio_ = GPIO_Port;
+    this->pin_ = GPIO_Pin;
   }
   void Set() final { LL_GPIO_SetOutputPin(pio_, pin_); };
   void Clear() final { LL_GPIO_ResetOutputPin(pio_, pin_); };
