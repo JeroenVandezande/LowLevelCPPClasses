@@ -78,7 +78,7 @@ public:
   void Clear() final { LL_GPIO_ResetOutputPin(pio_, pin_); };
   bool GetValue() final
   {
-    return (pio_->IDR & pin_) != (uint32_t)GPIO_PIN_RESET;
+    return (pio_->IDR & pin_) != static_cast<uint32_t>(GPIO_PIN_RESET);
   };
   void Toggle() final { LL_GPIO_TogglePin(pio_, pin_); };
 };
