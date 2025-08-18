@@ -20,7 +20,7 @@ endforeach()
 list(REMOVE_DUPLICATES LIB_INCLUDE_DIRS)
 
 include(cpm/CPM.cmake)
-CPMAddPackage("gh:an-dr/microlog@6.4.10")
+CPMAddPackage("gh:an-dr/microlog@6.5.0")
 
 target_compile_definitions( microlog
         INTERFACE
