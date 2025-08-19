@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.31.6)
 project(LowLevelEmbedded CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-enable_language(C)
+set(CMAKE_CXX_STANDARD 20)
+enable_language(C ASM CXX)
 
 file(GLOB_RECURSE LIB_INCLUDES "Base/*.h" "Base/*.hpp" "Devices/*.h" "Devices/*.hpp" "Logging/*.h" "Logging/*.hpp" "Segger_RTT/*.h" "Segger_RTT/*.hpp")
 file(GLOB_RECURSE LIB_SOURCES "Base/*.c" "Base/*.cpp" "Devices/*.c" "Devices/*.cpp" "Logging/*.c" "Logging/*.cpp" "Segger_RTT/*.c" "Segger_RTT/*.cpp")

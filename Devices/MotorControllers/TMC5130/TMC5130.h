@@ -232,7 +232,7 @@ public:
   uint16_t Motor_RampUp_CurrentInmA;
   uint16_t Motor_FullSpeed_CurrentInmA;
   float SenseResistorInOhms = 0;
-  IDACChannel *CurrentSetVoltageChannel;
+  ISimpleDACChannel *CurrentSetVoltageChannel;
 
   // Initialize a TMC5130 IC.
   // This function requires:
