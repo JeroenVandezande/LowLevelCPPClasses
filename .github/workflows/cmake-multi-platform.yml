@@ -41,29 +41,29 @@ jobs:
     - uses: actions/checkout@v4
     
     # ---------- Windows: set up MSYS2 + MinGW-w64 GCC ----------
-      - name: Set up MSYS2 (MinGW-w64) on Windows
-        if: runner.os == 'Windows'
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: >-
-            base-devel
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-make
-            mingw-w64-x86_64-ninja
+    - name: Set up MSYS2 (MinGW-w64) on Windows
+      if: runner.os == 'Windows'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: >-
+          base-devel
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-make
+          mingw-w64-x86_64-ninja
 
-      # ---------- Linux: ensure toolchain present (Ubuntu runners already have these, but harmless) ----------
-      - name: Install toolchain (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          if [ "${{ matrix.c_compiler }}" = "gcc" ]; then
-            sudo apt-get install -y build-essential cmake ninja-build
-          else
-            sudo apt-get install -y clang cmake ninja-build
-          fi
+    # ---------- Linux: ensure toolchain present (Ubuntu runners already have these, but harmless) ----------
+    - name: Install toolchain (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        if [ "${{ matrix.c_compiler }}" = "gcc" ]; then
+          sudo apt-get install -y build-essential cmake ninja-build
+        else
+          sudo apt-get install -y clang cmake ninja-build
+        fi
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
       id: strings
