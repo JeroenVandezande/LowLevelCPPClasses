@@ -1,5 +1,8 @@
 # LowLevelCPPClasses
 
+![Build](https://github.com/JeroenVandezande/LowLevelCPPClasses/actions/workflows/cmake-multi-platform.yml/badge.svg?branch=master)
+
+
 A small CPM Package containing C++ objects for common embedded interfaces/devices.
 
 Current Generic Interfaces:
