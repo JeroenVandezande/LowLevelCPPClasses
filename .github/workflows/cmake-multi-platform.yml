@@ -21,19 +21,23 @@ jobs:
         include:
           # Linux
           - os: ubuntu-latest
+            build_type: Release
             c_compiler: gcc
             cpp_compiler: g++
           - os: ubuntu-latest
+            build_type: Release
             c_compiler: clang
             cpp_compiler: clang++
 
           # Windows (MinGW-w64 GCC; no MSVC)
           - os: windows-latest
+            build_type: Release
             c_compiler: gcc
             cpp_compiler: g++
 
           # macOS (Apple Clang by default)
           - os: macos-latest
+            build_type: Release
             c_compiler: clang
             cpp_compiler: clang++
 
