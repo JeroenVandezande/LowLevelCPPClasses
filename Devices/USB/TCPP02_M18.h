@@ -1,9 +1,6 @@
-// Created by ChatGPT (per Jeroen's repo style), 2025-08-24
+#pragma once
 
-#ifndef TCPP02_M18_H
-#define TCPP02_M18_H
-
-#include "../../Base/LLE_I2C.h"
+#include "LLE_I2C.h"
 #include <stdint.h>
 
 /**
@@ -103,5 +100,3 @@ namespace LowLevelEmbedded::Devices::USB
         bool ReadStatus2(TCPP02M18_Status2Flags* out) const;
     };
 }
-
-#endif // TCPP02_M18_H

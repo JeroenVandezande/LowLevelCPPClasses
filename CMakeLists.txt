@@ -7,9 +7,7 @@ enable_language(C ASM CXX)
 file(GLOB_RECURSE LIB_INCLUDES "Base/*.h" "Base/*.hpp" "Devices/*.h" "Devices/*.hpp" "Logging/*.h" "Logging/*.hpp" "Segger_RTT/*.h" "Segger_RTT/*.hpp")
 file(GLOB_RECURSE LIB_SOURCES "Base/*.c" "Base/*.cpp" "Devices/*.c" "Devices/*.cpp" "Logging/*.c" "Logging/*.cpp" "Segger_RTT/*.c" "Segger_RTT/*.cpp")
 
-add_library(${PROJECT_NAME} ${LIB_INCLUDES} ${LIB_SOURCES}
-        Devices/LEDControllers/SerialLeds/ColorProfiles.h
-        Devices/LEDControllers/SerialLeds/Color.h)
+add_library(${PROJECT_NAME} ${LIB_INCLUDES} ${LIB_SOURCES})
 
 # Collect and de-duplicate parent directories
 set(LIB_INCLUDE_DIRS "")
