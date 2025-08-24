@@ -1,9 +1,5 @@
-//
-// Created by Jeroe on 2025-06-20.
-//
+#pragma once
 
-#ifndef LLE_ANALOG_H
-#define LLE_ANALOG_H
 #include <cstdint>
 #include <concepts>
 
@@ -191,5 +187,4 @@ namespace LowLevelEmbedded
         }
 
     };
-} // namespace LowLevelEmbedded
-#endif // LLE_ANALOG_H
+}

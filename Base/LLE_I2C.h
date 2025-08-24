@@ -1,5 +1,4 @@
-#ifndef LOWLEVELCPP_I2C_H
-#define LOWLEVELCPP_I2C_H
+#pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -49,4 +48,3 @@ namespace LowLevelEmbedded
     };
 }
 
-#endif //LOWLEVELCPP_I2C_H

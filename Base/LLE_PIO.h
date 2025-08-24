@@ -2,8 +2,7 @@
 // Created by Jeroen Vandezande on 24/03/2022.
 //
 
-#ifndef LOWLEVELCPP_PIO_H_
-#define LOWLEVELCPP_PIO_H_
+#pragma once
 
 #include <stdint.h>
 
@@ -71,4 +70,3 @@ namespace LowLevelEmbedded
 	};
 }
 
-#endif //LOWLEVELCPP_PIO_H_
