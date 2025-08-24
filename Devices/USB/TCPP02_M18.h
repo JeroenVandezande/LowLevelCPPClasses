@@ -72,7 +72,7 @@ namespace LowLevelEmbedded::Devices::USB
         static uint8_t encodePM(TCPP02M18_PowerMode_t pm);
         static uint8_t encodeVSel(TCPP02M18_VConnSel_t sel);
 
-        bool writeReg(uint8_t reg, uint8_t value) const;
+        bool writeReg(uint8_t value) const;
         bool readReg(uint8_t reg, uint8_t* value) const;
 
     public:
@@ -97,7 +97,7 @@ namespace LowLevelEmbedded::Devices::USB
         bool SetVCONNDischarge(bool enable) const;
         bool SelectVCONN(TCPP02M18_VConnSel_t sel) const;
         bool RecoverFromFault(TCPP02M18_PowerMode_t pm) const;
-        
+
         // --- Status readback ---
         bool ReadStatus1(TCPP02M18_Status1Flags* out) const;
         bool ReadStatus2(TCPP02M18_Status2Flags* out) const;
