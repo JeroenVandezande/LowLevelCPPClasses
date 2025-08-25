@@ -46,5 +46,13 @@ namespace LowLevelEmbedded
     	/// \return true if device is ready to communicate
     	virtual bool I2C_IsDeviceReady(uint8_t address) = 0;
     };
+
+    class II2CDevice
+    {
+    public:
+        virtual ~II2CDevice()
+        = default;
+        virtual bool IsDeviceReady() = 0;
+    };
 }
 

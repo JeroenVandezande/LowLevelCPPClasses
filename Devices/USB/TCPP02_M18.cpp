@@ -123,4 +123,10 @@ namespace LowLevelEmbedded::Devices::USBDevices
         if (!_I2CAccess->I2C_WriteMethod(_I2CAddress, &reg, 1)) return false;
         return _I2CAccess->I2C_ReadMethod(_I2CAddress, value, 1);
     }
+
+    bool TCPP02_M18::IsDeviceReady()
+    {
+        return _I2CAccess->I2C_IsDeviceReady(_I2CAddress);   
+    }
+
 }

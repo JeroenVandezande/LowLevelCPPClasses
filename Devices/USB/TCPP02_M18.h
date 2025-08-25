@@ -53,8 +53,11 @@ namespace LowLevelEmbedded::Devices::USBDevices
         bool IS_TCPP02; // 1 => TCPP02, 0 => TCPP03
     };
 
-    class TCPP02_M18
+    class TCPP02_M18: public II2CDevice
     {
+    public:
+        bool IsDeviceReady() override;
+
     private:
         II2CAccess* _I2CAccess;
         uint8_t _I2CAddress; // left‑adjusted 7‑bit address, bit0 unused (R/W)
