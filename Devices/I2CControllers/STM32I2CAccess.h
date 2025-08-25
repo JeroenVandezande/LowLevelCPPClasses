@@ -83,41 +83,29 @@ namespace LowLevelEmbedded
         // Write then Read (common for register access without STOP in between if repeated start is used)
         bool I2C_ReadWriteMethod(uint8_t address, uint8_t* data, size_t readLength, size_t writeLength) override
         {
-            HAL_StatusTypeDef st = HAL_I2C_Master_Transmit(I2C_, address, data,
-                                                           static_cast<uint16_t>(writeLength), timeout_ms_);
+            HAL_StatusTypeDef st = HAL_I2C_Master_Transmit(I2C_, address, data, static_cast<uint16_t>(writeLength),
+                                                           timeout_ms_);
             if (st != HAL_OK) return false;
 
             st = HAL_I2C_Master_Receive(I2C_, address, data, static_cast<uint16_t>(readLength), timeout_ms_);
             return (st == HAL_OK);
         }
 
-        // Memory read (HAL "Mem_Read"): reads 'length' bytes starting at 'memAddress'
-        // memAddSize is typically I2C_MEMADD_SIZE_8BIT or I2C_MEMADD_SIZE_16BIT
-        bool I2C_Mem_Read(uint8_t address, uint16_t memAddress, uint16_t memAddSize, uint8_t* data,
+        bool I2C_Mem_Read(uint8_t address, uint8_t memAddress, uint8_t memAddSize, uint8_t* data,
                           size_t length) override
         {
             HAL_StatusTypeDef st = HAL_I2C_Mem_Read(I2C_, address, memAddress, memAddSize, data,
                                                     static_cast<uint16_t>(length), timeout_ms_);
             return (st == HAL_OK);
         }
-
-        // Optional convenience: Memory write
-        bool I2C_Mem_Write(uint8_t address, uint16_t memAddress, uint16_t memAddSize, const uint8_t* data,
-                           size_t length)
-        {
-            HAL_StatusTypeDef st = HAL_I2C_Mem_Write(I2C_, address, memAddress, memAddSize,
-                                                     const_cast<uint8_t*>(data), static_cast<uint16_t>(length),
-                                                     timeout_ms_);
-            return (st == HAL_OK);
-        }
-
+        
         // Ping device
         bool I2C_IsDeviceReady(uint8_t address) override
         {
             HAL_StatusTypeDef st = HAL_I2C_IsDeviceReady(I2C_, address, 3, timeout_ms_);
             return (st == HAL_OK);
         }
-        
+
         I2C_HandleTypeDef* Handle() const { return I2C_; }
         uint32_t TimeoutMs() const { return timeout_ms_; }
         void SetTimeoutMs(uint32_t ms) { timeout_ms_ = ms; }
