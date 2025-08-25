@@ -7,29 +7,29 @@
  * ST TCPP02-M18 — USB Type‑C Source port protector/companion.
  * I2C addressing: 7‑bit base 0b011010x (0x34/0x35), left‑adjusted for II2CAccess (bit0 is R/W).
  */
-namespace LowLevelEmbedded::Devices::USB
+namespace LowLevelEmbedded::Devices::USBDevices
 {
     enum TCPP02M18_Registers_t
     {
-        TCPP02M18_Register_Control = 0x00, TCPP02M18_Register_Status1 = 0x01, TCPP02M18_Register_Status2 = 0x02
+        Control = 0x00, Status1 = 0x01, Status2 = 0x02
     };
 
     enum TCPP02M18_PowerMode_t
     {
-        TCPP02M18_PowerMode_Hibernate = 0,
+        Hibernate = 0,
         // PM2:PM1 = 00
-        TCPP02M18_PowerMode_LowPower = 1,
+        LowPower = 1,
         // PM2:PM1 = 10
-        TCPP02M18_PowerMode_Normal = 2 // PM2:PM1 = 01
+        Normal = 2 // PM2:PM1 = 01
     };
 
     enum TCPP02M18_VConnSel_t
     {
-        TCPP02M18_VConnSel_None = 0,
+        None = 0,
         // V2:V1 = 00 (open/open)
-        TCPP02M18_VConnSel_CC2 = 1,
+        CC2 = 1,
         // V2:V1 = 10 (close CC2)
-        TCPP02M18_VConnSel_CC1 = 2 // V2:V1 = 01 (close CC1)
+        CC1 = 2 // V2:V1 = 01 (close CC1)
         // 11 reserved
     };
 

@@ -1,6 +1,6 @@
 #include "TCPP02_M18.h"
 
-namespace LowLevelEmbedded::Devices::USB
+namespace LowLevelEmbedded::Devices::USBDevices
 {
     static inline void decodeStatus1(const uint8_t v, TCPP02M18_Status1Flags* s)
     {
@@ -26,9 +26,9 @@ namespace LowLevelEmbedded::Devices::USB
     {
         switch (pm)
         {
-        case TCPP02M18_PowerMode_Hibernate: return (uint8_t)(0b00u << 6);
-        case TCPP02M18_PowerMode_LowPower: return (uint8_t)(0b10u << 6);
-        case TCPP02M18_PowerMode_Normal: return (uint8_t)(0b01u << 6);
+        case Hibernate: return (uint8_t)(0b00u << 6);
+        case LowPower: return (uint8_t)(0b10u << 6);
+        case Normal: return (uint8_t)(0b01u << 6);
         default: return (uint8_t)(0b00u << 6);
         }
     }
@@ -37,9 +37,9 @@ namespace LowLevelEmbedded::Devices::USB
     {
         switch (sel)
         {
-        case TCPP02M18_VConnSel_None: return 0b00u;
-        case TCPP02M18_VConnSel_CC2: return 0b10u; // V2:V1=10 => CC2 closed
-        case TCPP02M18_VConnSel_CC1: return 0b01u; // V2:V1=01 => CC1 closed
+        case None: return 0b00u;
+        case CC2: return 0b10u; // V2:V1=10 => CC2 closed
+        case CC1: return 0b01u; // V2:V1=01 => CC1 closed
         default: return 0b00u;
         }
     }
@@ -47,7 +47,7 @@ namespace LowLevelEmbedded::Devices::USB
     bool TCPP02_M18::SetPowerMode(const TCPP02M18_PowerMode_t pm) const
     {
         uint8_t cur;
-        if (!readReg(TCPP02M18_Register_Control, &cur)) return false;
+        if (!readReg(Control, &cur)) return false;
         cur &= static_cast<uint8_t>(~CTRL_PM_MASK);
         cur |= encodePM(pm);
         return writeReg(cur);
@@ -56,7 +56,7 @@ namespace LowLevelEmbedded::Devices::USB
     bool TCPP02_M18::EnableGateDriver(const bool enable) const
     {
         uint8_t cur;
-        if (!readReg(TCPP02M18_Register_Control, &cur)) return false;
+        if (!readReg(Control, &cur)) return false;
         if (enable) cur |= CTRL_GDP;
         else cur &= (uint8_t)~CTRL_GDP;
         return writeReg(cur);
@@ -65,7 +65,7 @@ namespace LowLevelEmbedded::Devices::USB
     bool TCPP02_M18::SetVBUSDischarge(const bool enable) const
     {
         uint8_t cur;
-        if (!readReg(TCPP02M18_Register_Control, &cur)) return false;
+        if (!readReg(Control, &cur)) return false;
         if (enable) cur |= CTRL_VBUSD;
         else cur &= static_cast<uint8_t>(~CTRL_VBUSD);
         return writeReg(cur);
@@ -74,7 +74,7 @@ namespace LowLevelEmbedded::Devices::USB
     bool TCPP02_M18::SetVCONNDischarge(const bool enable) const
     {
         uint8_t cur;
-        if (!readReg(TCPP02M18_Register_Control, &cur)) return false;
+        if (!readReg(Control, &cur)) return false;
         if (enable) cur |= CTRL_VCONND;
         else cur &= static_cast<uint8_t>(~CTRL_VCONND);
         return writeReg(cur);
@@ -83,7 +83,7 @@ namespace LowLevelEmbedded::Devices::USB
     bool TCPP02_M18::SelectVCONN(const TCPP02M18_VConnSel_t sel) const
     {
         uint8_t cur;
-        if (!readReg(TCPP02M18_Register_Control, &cur)) return false;
+        if (!readReg(Control, &cur)) return false;
         cur &= static_cast<uint8_t>(~CTRL_VSEL_MASK);
         cur |= encodeVSel(sel);
         return writeReg(cur);
@@ -99,7 +99,7 @@ namespace LowLevelEmbedded::Devices::USB
     bool TCPP02_M18::ReadStatus1(TCPP02M18_Status1Flags* out) const
     {
         uint8_t v;
-        if (!readReg(TCPP02M18_Register_Status1, &v)) return false;
+        if (!readReg(Status1, &v)) return false;
         decodeStatus1(v, out);
         return true;
     }
@@ -107,7 +107,7 @@ namespace LowLevelEmbedded::Devices::USB
     bool TCPP02_M18::ReadStatus2(TCPP02M18_Status2Flags* out) const
     {
         uint8_t v;
-        if (!readReg(TCPP02M18_Register_Status2, &v)) return false;
+        if (!readReg(Status2, &v)) return false;
         decodeStatus2(v, out);
         return true;
     }

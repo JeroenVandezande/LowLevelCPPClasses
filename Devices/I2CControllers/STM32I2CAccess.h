@@ -98,7 +98,7 @@ namespace LowLevelEmbedded
                                                     static_cast<uint16_t>(length), timeout_ms_);
             return (st == HAL_OK);
         }
-        
+
         // Ping device
         bool I2C_IsDeviceReady(uint8_t address) override
         {
