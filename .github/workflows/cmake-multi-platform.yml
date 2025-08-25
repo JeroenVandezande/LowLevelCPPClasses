@@ -52,10 +52,8 @@ jobs:
         msystem: MINGW64
         update: true
         install: >-
-          base-devel
           mingw-w64-x86_64-gcc
           mingw-w64-x86_64-cmake
-          mingw-w64-x86_64-make
           mingw-w64-x86_64-ninja
     
     - name: Clean build dir (Windows)
@@ -75,22 +73,6 @@ jobs:
           -DCMAKE_C_COMPILER=/mingw64/bin/gcc.exe \
           -DCMAKE_CXX_COMPILER=/mingw64/bin/g++.exe \
           -DCMAKE_BUILD_TYPE=Release
-    
-    - name: Build (Windows/MinGW)
-      if: runner.os == 'Windows'
-      shell: msys2 {0}
-      run: cmake --build build --config Release
-  
-    - name: Test (Windows/MinGW)
-      if: runner.os == 'Windows'
-      shell: msys2 {0}
-      working-directory: build
-      run: |
-        ctest --output-on-failure --build-config Release
-        echo "Chosen C compiler (from cache):"
-        cmake -LA -N | grep CMAKE_C_COMPILER || true
-        echo "Generator (from cache):"
-        cmake -LA -N | grep CMAKE_GENERATOR || true
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
