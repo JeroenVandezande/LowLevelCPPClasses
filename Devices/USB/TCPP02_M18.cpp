@@ -26,10 +26,10 @@ namespace LowLevelEmbedded::Devices::USBDevices
     {
         switch (pm)
         {
-        case Hibernate: return (uint8_t)(0b00u << 6);
-        case LowPower: return (uint8_t)(0b10u << 6);
-        case Normal: return (uint8_t)(0b01u << 6);
-        default: return (uint8_t)(0b00u << 6);
+        case Hibernate: return (uint8_t)(0b00u << 4);
+        case LowPower: return (uint8_t)(0b10u << 4);
+        case Normal: return (uint8_t)(0b01u << 4);
+        default: return (uint8_t)(0b00u << 4);
         }
     }
 
@@ -126,7 +126,7 @@ namespace LowLevelEmbedded::Devices::USBDevices
 
     bool TCPP02_M18::IsDeviceReady()
     {
-        return _I2CAccess->I2C_IsDeviceReady(_I2CAddress);   
+        return _I2CAccess->I2C_IsDeviceReady(_I2CAddress);
     }
 
 }
