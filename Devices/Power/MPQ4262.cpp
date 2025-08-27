@@ -54,9 +54,9 @@ namespace LowLevelEmbedded::Devices::Power
 
     bool MPQ4262::SetVout_V(float volts)
     {
-        if (volts < 1.0f) volts = 1.0f; // adjust if your board supports lower
+        if (volts < 1.0f) volts = 1.0f;
         if (volts > 21.47f) volts = 21.47f; // device max range guard
-        uint16_t l16 = volts_to_L16(volts);
+        const uint16_t l16 = volts_to_L16(volts);
         return writeWord(0x21, l16);
     }
 

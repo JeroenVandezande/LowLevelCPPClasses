@@ -1,0 +1,259 @@
+#pragma once
+
+#include "LLE_ADC.h"
+
+#include <cstdint>
+#include <concepts>
+
+// --- Auto-include the right STM32 HAL ADC header ----------------------------
+#if defined(__has_include)
+#if   __has_include("stm32f0xx_hal_adc.h")
+#include "stm32f0xx_hal_adc.h"
+#elif __has_include("stm32f1xx_hal_adc.h")
+#include "stm32f1xx_hal_adc.h"
+#elif __has_include("stm32f2xx_hal_adc.h")
+#include "stm32f2xx_hal_adc.h"
+#elif __has_include("stm32f3xx_hal_adc.h")
+#include "stm32f3xx_hal_adc.h"
+#elif __has_include("stm32f4xx_hal_adc.h")
+#include "stm32f4xx_hal_adc.h"
+#elif __has_include("stm32f7xx_hal_adc.h")
+#include "stm32f7xx_hal_adc.h"
+#elif __has_include("stm32g0xx_hal_adc.h")
+#include "stm32g0xx_hal_adc.h"
+#elif __has_include("stm32g4xx_hal_adc.h")
+#include "stm32g4xx_hal_adc.h"
+#elif __has_include("stm32h7xx_hal_adc.h")
+#include "stm32h7xx_hal_adc.h"
+#elif __has_include("stm32l0xx_hal_adc.h")
+#include "stm32l0xx_hal_adc.h"
+#elif __has_include("stm32l1xx_hal_adc.h")
+#include "stm32l1xx_hal_adc.h"
+#elif __has_include("stm32l4xx_hal_adc.h")
+#include "stm32l4xx_hal_adc.h"
+#elif __has_include("stm32l5xx_hal_adc.h")
+#include "stm32l5xx_hal_adc.h"
+#elif __has_include("stm32u5xx_hal_adc.h")
+#include "stm32u5xx_hal_adc.h"
+#elif __has_include("stm32wbxx_hal_adc.h")
+#include "stm32wbxx_hal_adc.h"
+#elif __has_include("stm32wlxx_hal_adc.h")
+#include "stm32wlxx_hal_adc.h"
+#elif __has_include("stm32mp1xx_hal_adc.h")
+#include "stm32mp1xx_hal_adc.h"
+#else
+#error "No stm32*xx_hal_adc.h found in include paths. Add the proper Cube HAL include directories."
+#endif
+#else
+#error "__has_include not supported by this compiler. Include the correct stm32*xx_hal_adc.h before this header."
+#endif
+// ----------------------------------------------------------------------------
+
+namespace LowLevelEmbedded
+{
+    namespace STM32HAL
+    {
+        // Map HAL resolution enum to bit count across families.
+        inline uint8_t STM32_HAL_ResolutionBits(uint32_t hal_res_enum)
+        {
+            // Common HAL enums across families:
+#ifdef ADC_RESOLUTION_12B
+            if (hal_res_enum == ADC_RESOLUTION_12B)
+                return 12;
+#endif
+#ifdef ADC_RESOLUTION_10B
+            if (hal_res_enum == ADC_RESOLUTION_10B)
+                return 10;
+#endif
+#ifdef ADC_RESOLUTION_8B
+            if (hal_res_enum == ADC_RESOLUTION_8B)
+                return 8;
+#endif
+#ifdef ADC_RESOLUTION_6B
+            if (hal_res_enum == ADC_RESOLUTION_6B)
+                return 6;
+#endif
+            // Some families encode as LL macros; fallback safe default:
+            return 12;
+        }
+
+        // Simple channel index (0..15) -> ADC_CHANNEL_X macro.
+        // Extend as needed for VBAT, VREFINT, TEMPSENSOR, etc.
+        inline uint32_t STM32_ADC_ChannelMacro(uint8_t ch)
+        {
+            switch (ch)
+            {
+#ifdef ADC_CHANNEL_0
+            case 0:
+                return ADC_CHANNEL_0;
+            case 1:
+                return ADC_CHANNEL_1;
+            case 2:
+                return ADC_CHANNEL_2;
+            case 3:
+                return ADC_CHANNEL_3;
+            case 4:
+                return ADC_CHANNEL_4;
+            case 5:
+                return ADC_CHANNEL_5;
+            case 6:
+                return ADC_CHANNEL_6;
+            case 7:
+                return ADC_CHANNEL_7;
+            case 8:
+                return ADC_CHANNEL_8;
+            case 9:
+                return ADC_CHANNEL_9;
+            case 10:
+                return ADC_CHANNEL_10;
+            case 11:
+                return ADC_CHANNEL_11;
+            case 12:
+                return ADC_CHANNEL_12;
+            case 13:
+                return ADC_CHANNEL_13;
+            case 14:
+                return ADC_CHANNEL_14;
+            case 15:
+                return ADC_CHANNEL_15;
+#endif
+            default:
+                return 0xFFFFFFFFu; // invalid
+            }
+        }
+    }
+
+    template <std::unsigned_integral ValueT>
+    class STM32ADC : public IADC<ValueT>
+    {
+    public:
+        explicit STM32ADC(ADC_HandleTypeDef* hadc, float vref_volts = 3.3f, uint8_t max_channels = 16,
+                          uint32_t default_sample_time              =
+#ifdef HAL_ADC_MODULE_ENABLED
+#ifdef ADC_SAMPLETIME_3CYCLES
+                              ADC_SAMPLETIME_3CYCLES
+#elif defined(ADC_SAMPLETIME_2CYCLES_5)
+                              ADC_SAMPLETIME_2CYCLES_5
+#else
+                          0
+#endif
+#else
+                          0
+#endif
+            )
+            : hadc_(hadc), vref_(vref_volts), max_channels_(max_channels), default_sample_time_(default_sample_time)
+        {
+            bits_          = STM32HAL::STM32_HAL_ResolutionBits(hadc_->Init.Resolution);
+            max_adc_value_ = (bits_ >= 16) ? static_cast<ValueT>(0xFFFFu) : static_cast<ValueT>((1u << bits_) - 1u);
+        }
+
+        // ---- IADC<ValueT> -------------------------------------------------------
+        ValueT ReadADC(uint8_t channel) override
+        {
+            const uint32_t hal_ch = STM32HAL::STM32_ADC_ChannelMacro(channel);
+            if (hal_ch == 0xFFFFFFFFu)
+            {
+                return 0; // or assert/throw depending on your policy
+            }
+
+            ADC_ChannelConfTypeDef sConfig{};
+            sConfig.Channel = hal_ch;
+#if defined(ADC_REGULAR_RANK_1)
+            sConfig.Rank = ADC_REGULAR_RANK_1;
+#elif defined(ADC_REGULAR_RANK_1)
+            sConfig.Rank = ADC_REGULAR_RANK_1;
+#else
+            sConfig.Rank = 1u;
+#endif
+#if defined(ADC_SAMPLETIME_1CYCLE_5)
+            // Some L4/L5/G4 series use these names
+            sConfig.SamplingTime = default_sample_time_ ? default_sample_time_ : ADC_SAMPLETIME_1CYCLE_5;
+#else
+            sConfig.SamplingTime = default_sample_time_;
+#endif
+
+#if defined(HAL_ADC_MODULE_ENABLED)
+            if (HAL_ADC_ConfigChannel(hadc_, &sConfig) != HAL_OK)
+            {
+                return 0; // config error
+            }
+            if (HAL_ADC_Start(hadc_) != HAL_OK)
+            {
+                return 0; // start error
+            }
+            if (HAL_ADC_PollForConversion(hadc_, 10) != HAL_OK)
+            {
+                (void)HAL_ADC_Stop(hadc_);
+                return 0; // timeout/error
+            }
+            uint32_t raw = HAL_ADC_GetValue(hadc_);
+            (void)HAL_ADC_Stop(hadc_);
+            if (raw > static_cast<uint32_t>(
+                    max_adc_value_))
+                raw = static_cast<uint32_t>(max_adc_value_);
+            return static_cast<ValueT>(raw);
+#else
+            return 0;
+#endif
+        }
+
+        ValueT GetMaxADCValue() override
+        {
+            return max_adc_value_;
+        }
+
+        uint8_t GetMaxChannels() override
+        {
+            return max_channels_;
+        }
+
+        float ReadVoltage(uint8_t channel) override
+        {
+            const ValueT raw = ReadADC(channel);
+            return (static_cast<float>(raw) * vref_) / static_cast<float>(max_adc_value_);
+        }
+
+        IADCChannel<ValueT>* CreateChannelObject(uint8_t channel) override;
+
+        void SetVref(float vref_volts)
+        {
+            vref_ = vref_volts;
+        }
+
+        float GetVref() const
+        {
+            return vref_;
+        }
+
+        uint8_t GetResolutionBits() const
+        {
+            return bits_;
+        }
+
+    private:
+        ADC_HandleTypeDef* hadc_;
+        float vref_;
+        uint8_t max_channels_;
+        uint32_t default_sample_time_;
+        uint8_t bits_;
+        ValueT max_adc_value_;
+    };
+
+    // A concrete channel type that uses your fixed base class
+    template <std::unsigned_integral ValueT>
+    class STM32ADCChannel : public ADCChannel_base<ValueT>
+    {
+    public:
+        STM32ADCChannel(IADC<ValueT>* parent, uint8_t channel)
+            : ADCChannel_base<ValueT>(parent, channel)
+        {
+        }
+    };
+
+    template <std::unsigned_integral ValueT>
+    inline IADCChannel<ValueT>* STM32ADC<ValueT>::CreateChannelObject(uint8_t channel)
+    {
+        return new STM32ADCChannel<ValueT>(this, channel);
+    }
+}
+

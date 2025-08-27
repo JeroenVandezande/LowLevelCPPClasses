@@ -1,5 +1,5 @@
 #pragma once
-#include "LLE_Analog.h"
+#include "LLE_DAC.h"
 #include "LLE_PWM.h"
 
 namespace LowLevelEmbedded

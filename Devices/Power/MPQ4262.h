@@ -27,8 +27,8 @@ namespace LowLevelEmbedded::Devices::Power
     class MPQ4262
     {
     private:
-        II2CAccess* _I2C;
-        uint8_t _addrLeft;
+        II2CAccess* _I2C ;
+        const uint8_t _addrLeft = 0xCE;
 
         bool writeByte(uint8_t cmd, uint8_t data);
         bool writeWord(uint8_t cmd, uint16_t dataLE); // little-endian on wire
@@ -40,10 +40,9 @@ namespace LowLevelEmbedded::Devices::Power
         static float L16_to_volts(uint16_t w);
 
     public:
-        // i2c7bit defaults to 0x67 (typical for this variant)
-        MPQ4262(II2CAccess* i2c, uint8_t i2c7bit = 0x67)
-            : _I2C(i2c), _addrLeft(uint8_t(i2c7bit << 1))
+        MPQ4262(II2CAccess* i2c)
         {
+            _I2C = i2c;
         }
 
         // Core PMBus controls

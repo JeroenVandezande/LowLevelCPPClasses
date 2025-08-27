@@ -8,7 +8,7 @@
 #include "LLE_I2C.h"
 #include <stdint.h>
 
-#include "LLE_Analog.h"
+#include "LLE_DAC.h"
 
 namespace LowLevelEmbedded::Devices::DACs
 {
