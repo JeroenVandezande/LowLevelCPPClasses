@@ -63,10 +63,10 @@ namespace LowLevelEmbedded::Devices::USBDevices
         uint8_t _I2CAddress; // left‑adjusted 7‑bit address, bit0 unused (R/W)
 
         // Control register bits (datasheet Fig./table mapping):
-        static constexpr uint8_t CTRL_PM_MASK = (0b11u << 6); // PM2:PM1
-        static constexpr uint8_t CTRL_GDP = (1u << 4); // Gate Driver Provider enable
-        static constexpr uint8_t CTRL_VBUSD = (1u << 3); // VBUS discharge
-        static constexpr uint8_t CTRL_VCONND = (1u << 2); // VCONN discharge
+        static constexpr uint8_t CTRL_PM_MASK = (0b11u << 4); // PM2:PM1
+        static constexpr uint8_t CTRL_GDP = (1u << 2); // Gate Driver Provider enable
+        static constexpr uint8_t CTRL_VBUSD = (1u << 6); // VBUS discharge
+        static constexpr uint8_t CTRL_VCONND = (1u << 7); // VCONN discharge
         static constexpr uint8_t CTRL_VSEL_MASK = (0b11u); // V2:V1
 
         static uint8_t encodePM(TCPP02M18_PowerMode_t pm);

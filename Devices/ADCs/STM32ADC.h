@@ -123,6 +123,19 @@ namespace LowLevelEmbedded
         }
     }
 
+
+    // A concrete channel type that uses your fixed base class
+    template <std::unsigned_integral ValueT>
+    class STM32ADCChannel : public ADCChannel_base<ValueT>
+    {
+    public:
+        STM32ADCChannel(IADC<ValueT>* parent, uint8_t channel)
+            : ADCChannel_base<ValueT>(parent, channel)
+        {
+        }
+
+    };
+
     template <std::unsigned_integral ValueT>
     class STM32ADC : public IADC<ValueT>
     {
@@ -213,7 +226,10 @@ namespace LowLevelEmbedded
             return (static_cast<float>(raw) * vref_) / static_cast<float>(max_adc_value_);
         }
 
-        IADCChannel<ValueT>* CreateChannelObject(uint8_t channel) override;
+        IADCChannel<ValueT>* CreateChannelObject(uint8_t channel) override
+        {
+            return new STM32ADCChannel<ValueT>(this, channel);
+        }
 
         void SetVref(float vref_volts)
         {
@@ -239,21 +255,5 @@ namespace LowLevelEmbedded
         ValueT max_adc_value_;
     };
 
-    // A concrete channel type that uses your fixed base class
-    template <std::unsigned_integral ValueT>
-    class STM32ADCChannel : public ADCChannel_base<ValueT>
-    {
-    public:
-        STM32ADCChannel(IADC<ValueT>* parent, uint8_t channel)
-            : ADCChannel_base<ValueT>(parent, channel)
-        {
-        }
-    };
-
-    template <std::unsigned_integral ValueT>
-    inline IADCChannel<ValueT>* STM32ADC<ValueT>::CreateChannelObject(uint8_t channel)
-    {
-        return new STM32ADCChannel<ValueT>(this, channel);
-    }
 }
 
