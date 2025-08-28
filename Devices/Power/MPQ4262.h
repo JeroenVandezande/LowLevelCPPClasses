@@ -24,7 +24,7 @@ namespace LowLevelEmbedded::Devices::Power
         MPQ4262_CMD_MFR_OTP_REV = 0xDA
     };
 
-    class MPQ4262
+    class MPQ4262: public II2CDevice
     {
     private:
         II2CAccess* _I2C ;
@@ -44,6 +44,8 @@ namespace LowLevelEmbedded::Devices::Power
         {
             _I2C = i2c;
         }
+
+        bool IsDeviceReady() override;
 
         // Core PMBus controls
         bool SetOperation(bool on); // OPERATION (0x01)

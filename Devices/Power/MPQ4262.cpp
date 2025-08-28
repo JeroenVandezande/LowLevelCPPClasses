@@ -194,6 +194,11 @@ namespace LowLevelEmbedded::Devices::Power
         return WriteReg(0xD4, v);
     }
 
+    bool MPQ4262::IsDeviceReady()
+    {
+        return _I2C->I2C_IsDeviceReady(_addrLeft);
+    }
+
     bool MPQ4262::ReadReg(uint8_t reg, uint8_t* val) { return readByte(reg, val); }
     bool MPQ4262::WriteReg(uint8_t reg, uint8_t val) { return writeByte(reg, val); }
 }
