@@ -112,8 +112,9 @@ namespace LowLevelEmbedded::Devices::USBDevices
         return true;
     }
 
-    bool TCPP02_M18::writeReg(const uint8_t value) const
+    bool TCPP02_M18::writeReg(uint8_t value) const
     {
+        value = value | 0b00001000u;
         uint8_t buf[2] = {0, value}; //only register 0 is writable
         return _I2CAccess->I2C_WriteMethod(_I2CAddress, &buf[0], 2);
     }

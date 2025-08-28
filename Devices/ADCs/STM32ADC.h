@@ -116,6 +116,12 @@ namespace LowLevelEmbedded
                 return ADC_CHANNEL_14;
             case 15:
                 return ADC_CHANNEL_15;
+            case 16:
+                return ADC_CHANNEL_16;
+            case 17:
+                return ADC_CHANNEL_17;
+            case 18:
+                return ADC_CHANNEL_18;
 #endif
             default:
                 return 0xFFFFFFFFu; // invalid
@@ -171,6 +177,7 @@ namespace LowLevelEmbedded
 
             ADC_ChannelConfTypeDef sConfig{};
             sConfig.Channel = hal_ch;
+            sConfig.SingleDiff = ADC_SINGLE_ENDED;
 #if defined(ADC_REGULAR_RANK_1)
             sConfig.Rank = ADC_REGULAR_RANK_1;
 #elif defined(ADC_REGULAR_RANK_1)
@@ -178,12 +185,7 @@ namespace LowLevelEmbedded
 #else
             sConfig.Rank = 1u;
 #endif
-#if defined(ADC_SAMPLETIME_1CYCLE_5)
-            // Some L4/L5/G4 series use these names
-            sConfig.SamplingTime = default_sample_time_ ? default_sample_time_ : ADC_SAMPLETIME_1CYCLE_5;
-#else
-            sConfig.SamplingTime = default_sample_time_;
-#endif
+            sConfig.SamplingTime = 0;
 
 #if defined(HAL_ADC_MODULE_ENABLED)
             if (HAL_ADC_ConfigChannel(hadc_, &sConfig) != HAL_OK)
