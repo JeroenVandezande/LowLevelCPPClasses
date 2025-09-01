@@ -7,7 +7,7 @@ namespace LowLevelEmbedded::Devices::Power
         if (volts < 0) volts = 0;
         float val = volts * 1024.0f; // N = -10
         if (val > 65535.0f) val = 65535.0f;
-        return (uint16_t)(val + 0.5f);
+        return (uint16_t)val;
     }
 
     float MPQ4262::L16_to_volts(uint16_t w)
