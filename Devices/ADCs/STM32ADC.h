@@ -105,7 +105,7 @@
 // --------------------------------------------------------------------------------
 
 // Feature flag: families whose ADC channel config has .SingleDiff
-#if defined(STM32G4xx) || defined(STM32G0xx) || defined(STM32H7xx) || defined(STM32L4xx) || defined(STM32U5xx)
+#if __has_include("stm32g4xx_hal_adc_ex.h") || defined(STM32G0xx) || defined(STM32H7xx) || defined(STM32L4xx) || defined(STM32U5xx)
   #define LLE_ADC_HAS_SINGLE_DIFF 1
 #endif
 
