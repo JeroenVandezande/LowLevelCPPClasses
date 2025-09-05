@@ -11,6 +11,7 @@ namespace LowLevelEmbedded
     class IOPIN
     {
     public:
+        virtual ~IOPIN() = default;
         virtual void Set() = 0;
         virtual void Clear() = 0;
         virtual bool GetValue() = 0;

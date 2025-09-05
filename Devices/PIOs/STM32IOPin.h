@@ -62,23 +62,70 @@
 
 #endif // defined(__has_include)
 
-class STM32IOPin : public LowLevelEmbedded::IOPIN
+class STM32IOPin final : public LowLevelEmbedded::IOPIN
 {
 private:
-  GPIO_TypeDef *pio_;
-  uint16_t pin_;
+    GPIO_TypeDef* pio_;
+    uint16_t pin_;
 
 public:
-  STM32IOPin(GPIO_TypeDef *GPIO_Port, uint16_t GPIO_Pin)
-  {
-    this->pio_ = GPIO_Port;
-    this->pin_ = GPIO_Pin;
-  }
-  void Set() final { LL_GPIO_SetOutputPin(pio_, pin_); };
-  void Clear() final { LL_GPIO_ResetOutputPin(pio_, pin_); };
-  bool GetValue() final
-  {
-    return (pio_->IDR & pin_) != static_cast<uint32_t>(GPIO_PIN_RESET);
-  };
-  void Toggle() final { LL_GPIO_TogglePin(pio_, pin_); };
+    STM32IOPin(GPIO_TypeDef* GPIO_Port, const uint16_t GPIO_Pin)
+    {
+        this->pio_ = GPIO_Port;
+        this->pin_ = GPIO_Pin;
+    }
+
+    void Set() override
+    {
+        LL_GPIO_SetOutputPin(pio_, pin_);
+    };
+
+    void Clear() override
+    {
+        LL_GPIO_ResetOutputPin(pio_, pin_);
+    };
+
+    bool GetValue() override
+    {
+        return (pio_->IDR & pin_);
+    };
+
+    void Toggle() override
+    {
+        LL_GPIO_TogglePin(pio_, pin_);
+    };
+};
+
+class STM32IOInvertedPin final : public LowLevelEmbedded::IOPIN
+{
+private:
+    GPIO_TypeDef* pio_;
+    uint16_t pin_;
+
+public:
+    STM32IOInvertedPin(GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin)
+    {
+        this->pio_ = GPIO_Port;
+        this->pin_ = GPIO_Pin;
+    }
+
+    void Set() override
+    {
+        LL_GPIO_ResetOutputPin(pio_, pin_);
+    };
+
+    void Clear() override
+    {
+        LL_GPIO_SetOutputPin(pio_, pin_);
+    };
+
+    bool GetValue() override
+    {
+        return (pio_->IDR & pin_) == static_cast<uint32_t>(GPIO_PIN_RESET);
+    };
+
+    void Toggle() override
+    {
+        LL_GPIO_TogglePin(pio_, pin_);
+    };
 };
