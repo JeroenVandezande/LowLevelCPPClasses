@@ -83,6 +83,7 @@ namespace LowLevelEmbedded
         bool I2C_ReadWriteMethod(uint8_t address, uint8_t* data, size_t readLength, size_t writeLength) override;
         bool I2C_Mem_Read(uint8_t address, uint8_t memAddress, uint8_t memAddsize, uint8_t* data,
                           size_t readLength) override;
+        bool I2C_Mem_Write(uint8_t address, uint8_t memAddress, uint8_t memAddsize, uint8_t* data, size_t writeLength);
         bool I2C_IsDeviceReady(uint8_t address) override;
 
     private:

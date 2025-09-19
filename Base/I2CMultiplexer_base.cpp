@@ -42,8 +42,8 @@ namespace LowLevelEmbedded
         return _parent->_I2CAccess->I2C_ReadWriteMethod(address, data, readLength, writeLength);
     }
 
-    bool I2CMultiplexer_channel::I2C_Mem_Read(uint8_t address, uint8_t memAddress, uint8_t memAddsize, uint8_t* data,
-                                              size_t readLength)
+    bool I2CMultiplexer_channel::I2C_Mem_Read(const uint8_t address, const uint8_t memAddress, const uint8_t memAddsize, uint8_t* data,
+                                              const size_t readLength)
     {
         if (_channelnumber != _parent->_multiplexerchannel)
         {
@@ -51,6 +51,17 @@ namespace LowLevelEmbedded
             _parent->_multiplexerchannel = _channelnumber;
         }
         return _parent->_I2CAccess->I2C_Mem_Read(address, memAddress, memAddsize, data, readLength);
+    }
+
+    bool I2CMultiplexer_channel::I2C_Mem_Write(const uint8_t address, const uint8_t memAddress, const uint8_t memAddsize, uint8_t* data,
+                                             const size_t writeLength)
+    {
+        if (_channelnumber != _parent->_multiplexerchannel)
+        {
+            _parent->SwitchMultiplexerChannel(_channelnumber);
+            _parent->_multiplexerchannel = _channelnumber;
+        }
+        return _parent->_I2CAccess->I2C_Mem_Write(address, memAddress, memAddsize, data, writeLength);
     }
 
     bool I2CMultiplexer_channel::I2C_IsDeviceReady(uint8_t address)
