@@ -24,27 +24,28 @@ namespace LowLevelEmbedded
     } Display_Error_t;
 
 
-    template <class ColorType>
+    template <class DisplayColorType>
     class IDisplay
     {
+    public:
         std::function<void(uint32_t delay)> Delay_ms;
         virtual void Init();
-        void Fill(ColorType color);
+        void Fill(DisplayColorType color);
         void UpdateScreen();
-        void DrawPixel(uint8_t x, uint8_t y, ColorType color);
-        char WriteChar(char ch, Display_Font_t Font, ColorType color);
-        char WriteString(char* str, Display_Font_t Font, ColorType color);
+        void DrawPixel(uint8_t x, uint8_t y, DisplayColorType color);
+        char WriteChar(char ch, Display_Font_t Font, DisplayColorType color);
+        char WriteString(char* str, Display_Font_t Font, DisplayColorType color);
         void SetCursor(uint8_t x, uint8_t y);
-        void Line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, ColorType color);
+        void Line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, DisplayColorType color);
         void DrawArc(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep,
-                     ColorType color);
+                     DisplayColorType color);
         void DrawArcWithRadiusLine(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle,
-                                   uint16_t sweep, ColorType color);
-        void DrawCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, ColorType color);
-        void FillCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, ColorType par_color);
-        void Polyline(const DISPLAY_VERTEX* par_vertex, uint16_t par_size, ColorType color);
-        void DrawRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, ColorType color);
-        void FillRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, ColorType color);
+                                   uint16_t sweep, DisplayColorType color);
+        void DrawCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, DisplayColorType color);
+        void FillCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, DisplayColorType par_color);
+        void Polyline(const DISPLAY_VERTEX* par_vertex, uint16_t par_size, DisplayColorType color);
+        void DrawRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, DisplayColorType color);
+        void FillRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, DisplayColorType color);
 
         /**
                  * @brief Invert color of pixels in rectangle (include border)
@@ -57,7 +58,7 @@ namespace LowLevelEmbedded
                  */
         Display_Error_t InvertRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 
-        void DrawBitmap(uint8_t x, uint8_t y, const unsigned char* bitmap, uint8_t w, uint8_t h, ColorType color);
+        void DrawBitmap(uint8_t x, uint8_t y, const unsigned char* bitmap, uint8_t w, uint8_t h, DisplayColorType color);
 
         /**
                  * @brief Sets the contrast of the display.
