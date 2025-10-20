@@ -4,7 +4,7 @@
 
 #include "SHT4x.h"
 
-#include "googletest/googletest/include/gtest/internal/gtest-death-test-internal.h"
+#include "../../../Utilities/Delay.h"
 
 #include <iterator>
 
@@ -67,11 +67,12 @@ namespace LowLevelEmbedded
 
                 bool writeSuccess = _i2cAccess->I2C_WriteMethod(_address, &command, 1);
                 if (!writeSuccess) return false;
+                Utility::Delay_ms(9);
                 bool readSuccess = _i2cAccess->I2C_ReadMethod(_address, &data[0], 6);
                 if (!readSuccess) return false;
 
-                uint32_t temperatureRAW = data[0] << 8 && data[1];
-                uint32_t humidityRAW = data[3] << 8 && data[4];
+                uint32_t temperatureRAW = static_cast<uint16_t>(data[0]) << 8 | data[1];
+                uint32_t humidityRAW = static_cast<uint16_t>(data[3]) << 8 | data[4];
                 // Check both CRC calculations
                 if (CheckCRC(temperatureRAW, data[2]) && CheckCRC(humidityRAW, data[5]))
                 {
@@ -83,6 +84,13 @@ namespace LowLevelEmbedded
 
                 return false;
             }
+
+            void SHT4x::GetTemperature(float& temperature)
+            {
+                float humidity = 0;
+                ReadTemperatureAndHumidity(temperature, humidity, SHT4x_Precision::HIGH);
+            }
+
 
             /// CAUTIION: Use this feature sparingly (<10% of Operation Time)
             /// Returns temperature and humidity right before heater deactivation
@@ -108,10 +116,11 @@ namespace LowLevelEmbedded
 
                 bool writeSuccess = _i2cAccess->I2C_WriteMethod(_address, &command, 1);
                 if (!writeSuccess) return false;
+                Utility::Delay_ms(9);
                 bool readSuccess = _i2cAccess->I2C_ReadMethod(_address, &data[0], 6);
                 if (!readSuccess) return false;
-                uint32_t temperatureRAW = data[0] << 8 && data[1];
-                uint32_t humidityRAW = data[3] << 8 && data[4];
+                uint32_t temperatureRAW = data[0] << 8 | data[1];
+                uint32_t humidityRAW = data[3] << 8 | data[4];
                 // Check both CRC calculations
                 if (CheckCRC(temperatureRAW, data[2]) && CheckCRC(humidityRAW, data[5]))
                 {
@@ -130,11 +139,11 @@ namespace LowLevelEmbedded
                 uint8_t command = 0x89;
                 bool writeSuccess = _i2cAccess->I2C_WriteMethod(DEFAULT_I2C_ADDRESS, &command, 1);
                 if (!writeSuccess) return 0;
+                Utility::Delay_ms(9);
                 bool readSuccess = _i2cAccess->I2C_ReadMethod(DEFAULT_I2C_ADDRESS, &data[0], 6);
                 if (!readSuccess) return 0;
-
-                uint32_t serialMSBs = data[0] << 8 && data[1];
-                uint32_t serialLSBs = data[3] << 8 && data[4];
+                uint32_t serialMSBs = data[0] << 8 | data[1];
+                uint32_t serialLSBs = data[3] << 8 | data[4];
                 // Check both CRC calculations
                 if (CheckCRC(serialMSBs, data[2]) && CheckCRC(serialLSBs, data[5]))
                 {

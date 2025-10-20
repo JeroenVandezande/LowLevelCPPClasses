@@ -5,6 +5,7 @@
 #ifndef HOODCONNECTIONMASTER_SHT40_H
 #define HOODCONNECTIONMASTER_SHT40_H
 #include "LLE_I2C.h"
+#include "LLE_Temp.h"
 
 #include <cstdint>
 
@@ -29,7 +30,7 @@ namespace LowLevelEmbedded
                 H200mW_1000ms,
             } SHT4x_HeaterPreset;
 
-            class SHT4x
+            class SHT4x : ITempSensor
             {
                 private:
                     bool CheckCRC(uint16_t data, uint8_t crc);
@@ -41,6 +42,7 @@ namespace LowLevelEmbedded
                     void Reset();
                     bool ReadTemperatureAndHumidity(float& temperatureC, float& humidity, SHT4x_Precision precision = HIGH);
                     bool ActivateHeater(float& temperatureC, float& humidity, SHT4x_HeaterPreset preset);
+                    void GetTemperature(float& temperature) override;
                     uint32_t GetSerialNumber();
             };
         }
