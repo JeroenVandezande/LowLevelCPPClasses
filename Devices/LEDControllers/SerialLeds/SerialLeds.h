@@ -33,12 +33,16 @@ namespace LowLevelEmbedded
                 class SerialLED
                 {
                 private:
-                    size_t _bufferSize;
-                    uint8_t* _buffer;
+                    size_t _bufferSize;          // Size of the converted buffer
+                    size_t _originalBufferSize;  // Size of the original buffer
+                    uint8_t* _buffer;            // Original buffer
+                    uint8_t* _convertedBuffer;   // Buffer with 4-bit representation
                     uint16_t _numberOfLeds;
                     IColorProfile* _colorProfile = nullptr;
                     LowLevelEmbedded::ISPIAccess* _spiAccess;
+
                     void ClearLEDBuffer();
+                    void ConvertBuffer();  // Convert standard buffer to 4-bit representation
 
                 public:
                     /**

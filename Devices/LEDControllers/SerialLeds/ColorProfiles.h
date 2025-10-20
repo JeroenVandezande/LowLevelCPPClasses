@@ -100,5 +100,27 @@ namespace LowLevelEmbedded::Devices::LedControllers::SerialLeds
             dest[3] = color.w;
         }
     };
+
+    class BGRWProfile : public IColorProfile {
+    public:
+        uint8_t GetBytesPerLED() const override { return 4; }
+
+        void SetColor(uint8_t* buffer, uint16_t index, const Color& color) const override
+        {
+            uint8_t* led = buffer + index * 4;
+            led[0] = color.b; // B
+            led[1] = color.g; // G
+            led[2] = color.r; // R
+            led[3] = color.w; // W
+        }
+
+        void MapColor(uint8_t* dest, const Color& color) const override
+        {
+            dest[0] = color.b;
+            dest[1] = color.g;
+            dest[2] = color.r;
+            dest[3] = color.w;
+        }
+    };
 }
 
