@@ -55,6 +55,16 @@ namespace LowLevelEmbedded::Devices::Monitoring
 
 
     public:
+        /**
+         * @brief Constructs an instance of the INA228 class.
+         *
+         * This constructor initializes the INA228 device by configuring the
+         * I2C access, slave address, and sense resistor.
+         *
+         * @param i2cAccess Pointer to an object that provides I2C access.
+         * @param slaveAddress The 7-bit I2C address of the INA228 device.
+         * @param senseResistance The value of the sense resistor in ohms, used for calculations.
+         */
         INA228(II2CAccess* i2cAccess, const uint8_t slaveAddress, const float senseResistance)
         {
             _I2CAccess = i2cAccess;

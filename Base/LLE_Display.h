@@ -28,6 +28,7 @@ namespace LowLevelEmbedded
     class IDisplay
     {
     public:
+        virtual ~IDisplay() = default;
         using color_type = DisplayColorType;
         virtual void Init() = 0;
         virtual void Fill(color_type color) = 0;
