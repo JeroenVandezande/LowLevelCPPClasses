@@ -7,7 +7,10 @@
 #include "SSD1306.h"
 #include "LLE_I2C.h"
 #include "LLE_SPI.h"
+#include "../../Utilities/Delay.h"
+
 #include <math.h>
+#include <stdexcept>
 #include <string.h>
 
 namespace LowLevelEmbedded::Devices::Display
@@ -75,102 +78,157 @@ namespace LowLevelEmbedded::Devices::Display
 
     void SSD1306::Init()
     {
-        // // Reset OLED if reset pin is provided
-        // if (resetPin)
-        // {
-        //     Reset();
-        // }
-
         // Wait for the screen to boot
-        // HAL_Delay(100);
+        Utility::Delay_ms(100);
 
         // Init OLED
         WriteCommand(SSD1306_COMMAND_DISPLAY_OFF);                                   // 0xAE
 
-        WriteCommand(SSD1306_COMMAND_SET_DISPLAY_CLOCK_DIV);                         // 0xD5
-        WriteCommand(0x80);                                                          // The suggested ratio 0x80
+        // Addressing Mode
+        WriteCommand(SSD1306_COMMAND_MEMORY_MODE);                                   // 0x20
+        WriteCommand(0x00);                                                          // 0x0 horizontal addressing mode
+        // WriteCommand(0x02);                                                          // 0x0 page addressing mode
 
-        WriteCommand(SSD1306_COMMAND_SET_MULTIPLEX);                                 // 0xA8
-        WriteCommand(SSD1306_HEIGHT - 1);
+        // Vertical Mirroring
+        if (isMirroredVertically)
+        {
+            WriteCommand(SSD1306_COMMAND_COM_SCAN_INC);                              // 0xC0
+        }
+        else
+        {
+            WriteCommand(SSD1306_COMMAND_COM_SCAN_DEC);                              // 0xC8
+        }
+
+        WriteCommand(SSD1306_COMMAND_SET_START_LINE);                                // 0x40 line #0
+
+        // Set Contrast
+        WriteCommand(SSD1306_COMMAND_SET_CONTRAST);                                  // 0x81
+        WriteCommand(0xCF);
+
+        // Horizontal Mirroring
+        if (isMirroredHorizontally)
+        {
+            WriteCommand(SSD1306_COMMAND_SEG_REMAP | 0x00);                          // 0xA0
+        }
+        else
+        {
+            WriteCommand(SSD1306_COMMAND_SEG_REMAP | 0x01);                          // 0xA1
+        }
+
+        // Inverse Color
+        if (isMirroredVertically)
+        {
+            WriteCommand(SSD1306_COMMAND_INVERT_DISPLAY);                            // 0xA7
+        }
+        else
+        {
+            WriteCommand(SSD1306_COMMAND_NORMAL_DISPLAY);                            // 0xA6
+        }
+
+        // Set Multiplex Ratio Command
+        if (SSD1306_HEIGHT == 128)
+        {
+            // Found in the Luma Python lib for SH1106.
+            WriteCommand(0xFF);
+        }
+        else
+        {
+            //--set multiplex ratio(1 to 64) - CHECK
+            WriteCommand(SSD1306_COMMAND_SET_MULTIPLEX);                             // 0xA8
+        }
+
+        // Set Multiplex Ratio Value
+        if (SSD1306_HEIGHT == 32)
+        {
+            WriteCommand(0x1F);
+        }
+        else if (SSD1306_HEIGHT == 64)
+        {
+            WriteCommand(0x3F);
+        }
+        else if (SSD1306_HEIGHT == 128)
+        {
+            WriteCommand(0x3F);
+        }
+        else
+        {
+            throw new std::runtime_error("Invalid display height!");
+        }
+
+        //0xa4,Output follows RAM content;0xa5,Output ignores RAM content
+        WriteCommand(SSD1306_COMMAND_ENTIRE_DISPLAY_ON_RESUME);                      // 0xA4
 
         WriteCommand(SSD1306_COMMAND_SET_DISPLAY_OFFSET);                            // 0xD3
         WriteCommand(0x00);                                                          // No offset
 
-        WriteCommand(SSD1306_COMMAND_SET_START_LINE | 0x00);                         // 0x40 line #0
-
-        WriteCommand(SSD1306_COMMAND_CHARGE_PUMP);                                   // 0x8D
-        WriteCommand(0x14);                                                          // Use internal DC-DC Boost
-
-        //WriteCommand(SSD1306_COMMAND_MEMORY_MODE);                                   // 0x20
-        //WriteCommand(0x00);                                                          // 0x0 horizontal addressing mode
-
-        WriteCommand(SSD1306_COMMAND_SEG_REMAP | 0x01);                              // 0xA0 / 0xA1
-
-        WriteCommand(SSD1306_COMMAND_COM_SCAN_DEC);                                  // 0xC8
-
-        WriteCommand(SSD1306_COMMAND_SET_COM_PINS);                                  // 0xDA
-        WriteCommand(0x12);
-
-        WriteCommand(SSD1306_COMMAND_SET_CONTRAST);                                  // 0x81
-        WriteCommand(0xCF);
+        WriteCommand(SSD1306_COMMAND_SET_DISPLAY_CLOCK_DIV);                         // 0xD5
+        WriteCommand(0x80);
 
         WriteCommand(SSD1306_COMMAND_SET_PRECHARGE);                                 // 0xD9
         WriteCommand(0x22);
 
+        // COM Pins hardware configuration
+        WriteCommand(SSD1306_COMMAND_SET_COM_PINS);                                  // 0xDA
+        if (SSD1306_HEIGHT == 32)
+        {
+            WriteCommand(0x02);
+        }
+        else if (SSD1306_HEIGHT == 64)
+        {
+            WriteCommand(0x12);
+        }
+        else if (SSD1306_HEIGHT == 128)
+        {
+            WriteCommand(0x12);
+        }
+        else
+        {
+            throw new std::runtime_error("Invalid display height!");
+        }
+
         WriteCommand(SSD1306_COMMAND_SET_VCOM_DETECT);                               // 0xDB
         WriteCommand(0x30);
 
-        WriteCommand(SSD1306_COMMAND_ENTIRE_DISPLAY_ON_RESUME);                      // 0xA4
-
-        WriteCommand(SSD1306_COMMAND_NORMAL_DISPLAY);                                // 0xA6
+        WriteCommand(SSD1306_COMMAND_CHARGE_PUMP);                                   // 0x8D
+        WriteCommand(0x14);                                                          // Use internal DC-DC Boost
 
         WriteCommand(SSD1306_COMMAND_DISPLAY_ON);                                    // 0xAF
+
+        Fill(Black);
 
         Display.CurrentX = 0;
         Display.CurrentY = 0;
         Display.Initialized = 1;
         Display.DisplayOn = 1;
+
+        UpdateScreen();
     }
+
+
 
     void SSD1306::Fill(SSD1306_COLOR color)
     {
         // Fill buffer with selected color
-        uint32_t i;
-        for (i = 0; i < sizeof(Buffer); i++)
-        {
-            Buffer[i] = (color == Black) ? 0x00 : 0xFF;
-        }
+        memset(Buffer, (color == Black) ? 0x00 : 0xFF, sizeof(Buffer));
     }
 
+    /* Write the screenbuffer with changed to the screen */
     void SSD1306::UpdateScreen()
     {
+        // Write data to each page of RAM. Number of pages
+        // depends on the screen height:
+        //
+        //  * 32px   ==  4 pages
+        //  * 64px   ==  8 pages
+        //  * 128px  ==  16 pages
         // Write data to controller memory
         if (Display.Initialized)
         {
-            // Set column and page address range
-            WriteCommand(SSD1306_COMMAND_COLUMN_ADDR);
-            WriteCommand(0);
-            WriteCommand(SSD1306_WIDTH - 1);
-
-            WriteCommand(SSD1306_COMMAND_PAGE_ADDR);
-            WriteCommand(0);
-            WriteCommand(SSD1306_HEIGHT / 8 - 1);
-
-            // Write buffer data
-            if (isSPI)
-            {
-                // SPI write buffer
-                WriteData(Buffer, SSD1306_BUFFER_SIZE);
-            }
-            else
-            {
-                // I2C requires control byte for data
-                uint8_t buffer[SSD1306_BUFFER_SIZE + 1]; // +1 for control byte
-                buffer[0] = SSD1306_CONTROL_BYTE_DATA_STREAM;
-                memcpy(buffer + 1, Buffer, SSD1306_BUFFER_SIZE);
-
-                // Write the buffer to I2C
-                i2c_Access->I2C_WriteMethod(address, buffer, SSD1306_BUFFER_SIZE + 1);
+            for(uint8_t i = 0; i < SSD1306_HEIGHT/8; i++) {
+                WriteCommand(0xB0 + i); // Set the current RAM page address.
+                WriteCommand(0x00 + SSD1306_X_OFFSET_LOWER);
+                WriteCommand(0x10 + SSD1306_X_OFFSET_UPPER);
+                WriteData(&Buffer[SSD1306_WIDTH*i],SSD1306_WIDTH);
             }
         }
     }
@@ -196,101 +254,39 @@ namespace LowLevelEmbedded::Devices::Display
 
     char SSD1306::WriteChar(char ch, Display_Font_t Font, SSD1306_COLOR color)
     {
+        uint32_t i, b, j;
+
         // Check if character is valid
         if (ch < 32 || ch > 126)
             return 0;
 
-        // Check if font is monospaced or proportional
-        if (Font.char_width == nullptr)
+        // Char width is not equal to font width for proportional font
+        const uint8_t char_width = Font.char_width ? Font.char_width[ch-32] : Font.width;
+        // Check remaining space on current line
+        if (SSD1306_WIDTH < (Display.CurrentX + char_width) ||
+            SSD1306_HEIGHT < (Display.CurrentY + Font.height))
         {
-            // Monospaced font
-            uint32_t i, b, j;
-
-            // Calculate character position in font data array
-            uint32_t font_data_position = (ch - 32) * Font.height;
-            // Get character data
-            const uint16_t* data = &Font.data[font_data_position];
-
-            // Get height in bytes
-            uint8_t height_bytes = (Font.height + 7) / 8;
-
-            // Draw the character
-            for (i = 0; i < Font.width; i++)
-            {
-                uint8_t line = 0;
-                for (b = 0; b < height_bytes; b++)
-                {
-                    line |= data[b * Font.width + i] << (b * 8);
-                }
-
-                for (j = 0; j < Font.height; j++)
-                {
-                    if (line & (1 << j))
-                    {
-                        DrawPixel(Display.CurrentX + i, Display.CurrentY + j, color);
-                    }
-                    else
-                    {
-                        DrawPixel(Display.CurrentX + i, Display.CurrentY + j, (SSD1306_COLOR)!color);
-                    }
-                }
-            }
-
-            // The current position is now after the character
-            Display.CurrentX += Font.width;
-
-            // Return written char for validation
-            return ch;
+            // Not enough space on current line
+            return 0;
         }
-        else
-        {
-            // Proportional font
-            uint32_t i, b, j;
 
-            // Calculate character position in font data array
-            uint32_t font_data_position = 0;
-            for (uint8_t k = 0; k < (ch - 32); k++)
-            {
-                font_data_position += Font.char_width[k];
-            }
-
-            // Get character width
-            uint8_t char_width = Font.char_width[ch - 32];
-
-            // Get height in bytes
-            uint8_t height_bytes = (Font.height + 7) / 8;
-
-            // Get character data
-            const uint16_t* data = &Font.data[font_data_position];
-
-            // Draw the character
-            for (i = 0; i < char_width; i++)
-            {
-                uint8_t line = 0;
-                for (b = 0; b < height_bytes; b++)
-                {
-                    line |= data[b * char_width + i] << (b * 8);
-                }
-
-                for (j = 0; j < Font.height; j++)
-                {
-                    if (line & (1 << j))
-                    {
-                        DrawPixel(Display.CurrentX + i, Display.CurrentY + j, color);
-                    }
-                    else
-                    {
-                        DrawPixel(Display.CurrentX + i, Display.CurrentY + j, (SSD1306_COLOR)!color);
-                    }
+        // Use the font to write
+        for(i = 0; i < Font.height; i++) {
+            b = Font.data[(ch - 32) * Font.height + i];
+            for(j = 0; j < char_width; j++) {
+                if((b << j) & 0x8000)  {
+                    DrawPixel(Display.CurrentX + j, (Display.CurrentY + i), (SSD1306_COLOR) color);
+                } else {
+                    DrawPixel(Display.CurrentX + j, (Display.CurrentY + i), (SSD1306_COLOR)!color);
                 }
             }
-
-            // The current position is now after the character
-            Display.CurrentX += char_width;
-
-            // Return written char for validation
-            return ch;
         }
+
+        // The current space is now taken
+        Display.CurrentX += char_width;
+
+        // Return written char for validation
+        return ch;
     }
 
     char SSD1306::WriteString(char* str, Display_Font_t Font, SSD1306_COLOR color)
@@ -513,6 +509,24 @@ namespace LowLevelEmbedded::Devices::Display
         }
     }
 
+    // Mirrors display. Re-init and screen clear should be ran after.
+    void SSD1306::MirrorHorizontally(bool isMirrored)
+    {
+        isMirroredHorizontally = isMirrored;
+    }
+
+    // Mirrors display. Re-init and screen clear should be ran after.
+    void SSD1306::MirrorVertically(bool isMirrored)
+    {
+        isMirroredVertically = isMirrored;
+    }
+
+    void SSD1306::InverseColor(bool isInverse)
+    {
+        isInverseColor = isInverse;
+    }
+
+
     void SSD1306::SetContrast(const uint8_t value)
     {
         WriteCommand(0x81);    // Set contrast control
@@ -541,32 +555,24 @@ namespace LowLevelEmbedded::Devices::Display
     void SSD1306::Reset()
     {
         // TODO: Reset the display using the reset pin if provided
-    }
-
-    SSD1306_Error_t SSD1306::FillBuffer(uint8_t* buf, uint32_t len)
-    {
-        if (len != SSD1306_BUFFER_SIZE)
-            return SSD1306_ERR;
-
-        memcpy(Buffer, buf, len);
-        return SSD1306_OK;
+        Init();
     }
 
     // Private methods
     void SSD1306::WriteCommand(uint8_t byte)
     {
         uint8_t buffer[2];
-        buffer[0] = SSD1306_CONTROL_BYTE_CMD_SINGLE;
-        buffer[1] = byte;
+        buffer[0] = byte;
         if (isSPI)
         {
+            // TODO: Implement SPI
             // SPI mode command write
             spi_Access->WriteSPI(buffer, 2, csPin, mode);
         }
         else
         {
             // I2C mode command write
-            i2c_Access->I2C_WriteMethod(address, buffer, 2);
+            i2c_Access->I2C_Mem_Write(address, 0x00, 1,  &byte, 1);
         }
     }
 
@@ -580,7 +586,7 @@ namespace LowLevelEmbedded::Devices::Display
         else
         {
             // I2C mode data write handled in UpdateScreen method
-            i2c_Access->I2C_WriteMethod(address, buffer, buff_size);
+            i2c_Access->I2C_Mem_Write(address, 0x40, 1, buffer, buff_size);
         }
     }
 

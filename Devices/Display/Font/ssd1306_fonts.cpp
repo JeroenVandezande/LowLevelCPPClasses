@@ -1,6 +1,11 @@
 
 #include "ssd1306_fonts.h"
 
+/*
+ * Enable these fonts in your cmake file.
+ * For Example:
+ * target_compile_definitions(LowLevelEmbedded PUBLIC LOWLEVELCPPCLASSES_DISABLE_EXCEPTIONS PUBLIC SSD1306_INCLUDE_FONT_6x8)
+*/
 namespace LowLevelEmbedded::Devices::Display::Font
 {
 #ifdef SSD1306_INCLUDE_FONT_7x10

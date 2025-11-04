@@ -4,8 +4,8 @@ project(LowLevelEmbedded CXX)
 set(CMAKE_CXX_STANDARD 20)
 enable_language(C ASM CXX)
 
-file(GLOB_RECURSE LIB_INCLUDES "Base/*.h" "Base/*.hpp" "Devices/*.h" "Devices/*.hpp" "Logging/*.h" "Logging/*.hpp" "Segger_RTT/*.h" "Segger_RTT/*.hpp")
-file(GLOB_RECURSE LIB_SOURCES "Base/*.c" "Base/*.cpp" "Devices/*.c" "Devices/*.cpp" "Logging/*.c" "Logging/*.cpp" "Segger_RTT/*.c" "Segger_RTT/*.cpp")
+file(GLOB_RECURSE LIB_INCLUDES "Base/*.h" "Base/*.hpp" "Devices/*.h" "Devices/*.hpp" "Logging/*.h" "Logging/*.hpp" "Segger_RTT/*.h" "Segger_RTT/*.hpp" "Utilities/*.h" "Utilities/*.hpp")
+file(GLOB_RECURSE LIB_SOURCES "Base/*.c" "Base/*.cpp" "Devices/*.c" "Devices/*.cpp" "Logging/*.c" "Logging/*.cpp" "Segger_RTT/*.c" "Segger_RTT/*.cpp" "Utilities/*.cpp" "Utilities/*.c")
 
 add_library(${PROJECT_NAME} ${LIB_INCLUDES} ${LIB_SOURCES})
 

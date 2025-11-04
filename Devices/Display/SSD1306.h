@@ -76,6 +76,9 @@ namespace LowLevelEmbedded::Devices::Display
         uint8_t address;
         uint16_t csPin;
         SPIMode mode;
+        bool isMirroredHorizontally = false;
+        bool isMirroredVertically = false;
+        bool isInverseColor = false;
 
         // Low-level procedures
         void WriteCommand(uint8_t byte);
@@ -89,6 +92,9 @@ namespace LowLevelEmbedded::Devices::Display
         void Init() override;
         void Fill(SSD1306_COLOR color) override;
         void UpdateScreen();
+        void MirrorHorizontally(bool isMirrored);
+        void MirrorVertically(bool isMirrored);
+        void InverseColor(bool isInverse);
         void DrawPixel(uint8_t x, uint8_t y, SSD1306_COLOR color) override;
         char WriteChar(char ch, Display_Font_t Font, SSD1306_COLOR color) override;
         char WriteString(char* str, Display_Font_t Font, SSD1306_COLOR color) override;
@@ -109,6 +115,5 @@ namespace LowLevelEmbedded::Devices::Display
         void SetDisplayOn(const bool on) override;
         bool GetDisplayOn() const override;
         void Reset() override;
-        SSD1306_Error_t FillBuffer(uint8_t* buf, uint32_t len);
     };
 }

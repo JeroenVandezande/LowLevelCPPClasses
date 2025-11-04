@@ -10,7 +10,10 @@ namespace LowLevelEmbedded
 {
     namespace Utility
     {
+        /// Usage: LowLevelEmbedded::Utility::Delay_ms = HAL_Delay;
         inline std::function<void(uint32_t delay)> Delay_ms;
+
+        /// Usage: LowLevelEmbedded::Utility::Delay_us = DelayUs_DWT;
         inline std::function<void(uint32_t delay)> Delay_us;
     }
 }
