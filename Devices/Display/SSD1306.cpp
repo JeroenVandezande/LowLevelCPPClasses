@@ -496,17 +496,27 @@ namespace LowLevelEmbedded::Devices::Display
 
     void SSD1306::DrawBitmap(uint8_t x, uint8_t y, const unsigned char* bitmap, uint8_t w, uint8_t h, SSD1306_COLOR color)
     {
-        for (uint8_t j = 0; j < h; j++)
-        {
-            for (uint8_t i = 0; i < w; i++)
-            {
-                // If bit is set in bitmap, draw pixel
-                if (bitmap[j * w + i] != 0x00)
-                {
-                    DrawPixel(x + i, y + j, color);
+        int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
+        uint8_t byte = 0;
+
+        if (x >= SSD1306_WIDTH || y >= SSD1306_HEIGHT) {
+            return;
+        }
+
+        for (uint8_t j = 0; j < h; j++, y++) {
+            for (uint8_t i = 0; i < w; i++) {
+                if (i & 7) {
+                    byte <<= 1;
+                } else {
+                    byte = (*(const unsigned char *)(&bitmap[j * byteWidth + i / 8]));
+                }
+
+                if (byte & 0x80) {
+                    DrawPixel(x + i, y, color);
                 }
             }
         }
+        return;
     }
 
     // Mirrors display. Re-init and screen clear should be ran after.
