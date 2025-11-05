@@ -8,7 +8,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <_ansi.h>
 #include "LLE_Display.h"
 #include "LLE_I2C.h"
 #include "LLE_SPI.h"

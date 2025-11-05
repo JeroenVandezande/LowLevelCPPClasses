@@ -48,7 +48,63 @@ namespace LowLevelEmbedded
                 _i2cAccess->I2C_WriteMethod(_address, &command, 1);
             }
 
-
+           
+            ///
+            /// @brief Read temperature and relative humidity from the SHT4x sensor.
+            ///
+            /// This function triggers a single-shot measurement on the sensor using the specified
+            /// precision, waits for the measurement to complete, reads back the measurement
+            /// results, validates them using the CRC bytes provided by the sensor, and converts
+            /// the raw values to engineering units (degrees Celsius and relative humidity).
+            ///
+            /// The function performs a single I2C write to request a measurement and then a single
+            /// I2C read to obtain 6 bytes (temperature MSB, temperature LSB, temperature CRC,
+            /// humidity MSB, humidity LSB, humidity CRC). If either the write or read operation
+            /// fails, or if CRC validation fails for either measurement, the function returns false.
+            ///
+            /// Temperature conversion:
+            ///   temperatureC = -45 + 175 * (temperatureRAW / 65535.0f)
+            ///
+            /// Relative humidity conversion:
+            ///   humidity = (-6 + 125 * (humidityRAW / 65535.0f)) / 100.0f
+            ///
+            /// Note: The relative humidity return value is given as a fraction (e.g. 0.45 = 45% RH).
+            ///
+            /// @param[out] temperatureC Reference to float where the measured temperature in
+            ///                         degrees Celsius will be stored on success.
+            /// @param[out] humidity     Reference to float where the measured relative humidity
+            ///                         (fraction, 0.0 to 1.0) will be stored on success.
+            /// @param[in]  precision    Measurement precision/power trade-off selector. The
+            ///                         precision determines which sensor command is used and
+            ///                         affects measurement duration and power consumption:
+            ///                           - HIGH   : highest precision (longest measurement time)
+            ///                           - MEDIUM : medium precision
+            ///                           - LOW    : lowest precision (shortest measurement time)
+            ///
+            /// @return true on success (measurements read and CRC validated), false on failure
+            ///         (I2C write/read error or CRC mismatch).
+            ///
+            /// @remarks
+            /// - The method performs an internal blocking delay to allow the sensor to complete
+            ///   the measurement. Callers should expect this method to block for the sensor's
+            ///   measurement time (the code issues Utility::Delay_ms(9) after the write).
+            /// - Both CRC bytes provided by the sensor are validated; a failed CRC for either
+            ///   measurement causes the function to return false.
+            /// - This function alters the I2C bus state by performing a write followed by a read
+            ///   and thus should not be called concurrently with other I2C operations on the
+            ///   same bus without external synchronization.
+            /// - Units:
+            ///     temperatureC -> degrees Celsius
+            ///     humidity     -> fraction (0.0 .. 1.0), where 1.0 == 100% RH
+            ///
+            /// @example
+            /// float tC = 0.0f, rh = 0.0f;
+            /// if (sensor.ReadTemperatureAndHumidity(tC, rh, SHT4x_Precision::HIGH)) {
+            ///     // Use tC (°C) and rh (fraction)
+            /// } else {
+            ///     // Handle read/CRC/I2C failure
+            /// }
+            ///
             bool SHT4x::ReadTemperatureAndHumidity(float& temperatureC, float& humidity, SHT4x_Precision precision)
             {
                 uint8_t data[6];
@@ -77,7 +133,7 @@ namespace LowLevelEmbedded
                 if (CheckCRC(temperatureRAW, data[2]) && CheckCRC(humidityRAW, data[5]))
                 {
                     // Get Relative Humidity
-                    humidity = -6 + 125 * (humidityRAW / 65535.0f);
+                    humidity = (-6 + 125 * (humidityRAW / 65535.0f)) / 100.0f;
                     temperatureC = -45 + 175 * (temperatureRAW / 65535.0f);
                     return true;
                 }
@@ -85,14 +141,73 @@ namespace LowLevelEmbedded
                 return false;
             }
 
-            void SHT4x::GetTemperature(float& temperature)
-            {
-                float humidity = 0;
-                ReadTemperatureAndHumidity(temperature, humidity, SHT4x_Precision::HIGH);
-            }
+                /**
+                 * @brief Convenience wrapper that returns the current temperature (°C).
+                 *
+                 * This method performs a single-shot measurement using the sensor at HIGH
+                 * precision and returns only the temperature component. Internally it calls
+                 * ReadTemperatureAndHumidity(...) with SHT4x_Precision::HIGH and discards the
+                 * humidity result.
+                 *
+                 * Behavior and failure modes:
+                 * - The call is blocking because the underlying read function performs an
+                 *   I2C write/read sequence and waits for the measurement to complete.
+                 * - If the underlying measurement/read fails (I2C error or CRC mismatch),
+                 *   the returned value will be the default-initialized temperature value
+                 *   (0.0f in the current implementation). Callers that need to detect
+                 *   read failures should call ReadTemperatureAndHumidity(...) directly.
+                 *
+                 * @return Measured temperature in degrees Celsius on success; default (0.0f)
+                 *         if the underlying read fails.
+                 */
+                float SHT4x::GetTemperature()
+                {
+                    float humidity, temperature = 0;
+                    ReadTemperatureAndHumidity(temperature, humidity, SHT4x_Precision::HIGH);
+                    return temperature;
+                }
 
+                /**
+                 * @brief Convenience wrapper that returns the current relative humidity.
+                 *
+                 * This method triggers a single-shot high-precision measurement on the sensor
+                 * and returns only the humidity component. It internally calls
+                 * ReadTemperatureAndHumidity(..., SHT4x_Precision::HIGH) and discards the
+                 * temperature result.
+                 *
+                 * Behavior and guarantees:
+                 * - The returned value is normalized/clamped to the valid range [0.0, 1.0],
+                 *   where 1.0 corresponds to 100% relative humidity.
+                 * - The call is blocking: the underlying read performs an I2C write/read
+                 *   sequence and waits for the sensor measurement to complete.
+                 * - If the underlying ReadTemperatureAndHumidity call fails (I2C error or
+                 *   CRC mismatch), this method returns the default humidity value (0.0f).
+                 *
+                 * Usage notes:
+                 * - If the caller needs to distinguish between a valid 0% reading and an
+                 *   error, call ReadTemperatureAndHumidity(...) directly and check its
+                 *   boolean return value.
+                 * - The humidity value returned is a fraction in the range [0.0 .. 1.0].
+                 *
+                 * @return Relative humidity as a fraction (0.0 .. 1.0). Values outside the
+                 *         physical range are clamped to that range.
+                 */
+                float SHT4x::GetHumidity()
+                {
+                    float humidity, temperature = 0;
+                    ReadTemperatureAndHumidity(temperature, humidity, SHT4x_Precision::HIGH);
+                    if (humidity < 0.0f)
+                    {
+                        humidity = 0.0f;
+                    }
+                    if (humidity > 1.0f)
+                    {
+                        humidity = 1.0f;
+                    }
+                    return humidity;
+                }
 
-            /// CAUTIION: Use this feature sparingly (<10% of Operation Time)
+            /// CAUTION: Use this feature sparingly (<10% of Operation Time)
             /// Returns temperature and humidity right before heater deactivation
             bool SHT4x::ActivateHeater(float& temperatureC, float& humidity, SHT4x_HeaterPreset preset)
             {

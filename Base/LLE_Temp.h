@@ -9,12 +9,10 @@
 
 namespace LowLevelEmbedded
 {
-    class ITempSensor
+    class ITemperatureSensor
     {
     public:
-        virtual ~ITempSensor()
-        {
-        };
-        virtual void GetTemperature(float& temperature) = 0;
+        virtual ~ITemperatureSensor() = default;
+        virtual float GetTemperature() = 0;
     };
 }

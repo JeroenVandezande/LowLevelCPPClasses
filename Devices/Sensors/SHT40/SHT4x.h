@@ -9,6 +9,8 @@
 
 #include <cstdint>
 
+#include "LLE_Humidity.h"
+
 namespace LowLevelEmbedded::Devices::Sensors
 {
     typedef enum {
@@ -26,7 +28,7 @@ namespace LowLevelEmbedded::Devices::Sensors
         H200mW_1000ms,
     } SHT4x_HeaterPreset;
 
-    class SHT4x : ITempSensor
+    class SHT4x final : public ITemperatureSensor, IHumiditySensor
     {
     private:
         bool CheckCRC(uint16_t data, uint8_t crc);
@@ -38,7 +40,8 @@ namespace LowLevelEmbedded::Devices::Sensors
         void Reset();
         bool ReadTemperatureAndHumidity(float& temperatureC, float& humidity, SHT4x_Precision precision = HIGH);
         bool ActivateHeater(float& temperatureC, float& humidity, SHT4x_HeaterPreset preset);
-        void GetTemperature(float& temperature) override;
+        float GetTemperature() override;
+        float GetHumidity() override;
         uint32_t GetSerialNumber();
     };
 }
