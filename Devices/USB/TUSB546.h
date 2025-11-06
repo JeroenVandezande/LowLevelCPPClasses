@@ -29,6 +29,8 @@ namespace LowLevelEmbedded::Devices::USBDevices
 
         bool SetFlipped(bool flipped) const;
 
+        bool SwapHDP_IN_Pins(bool flipped) const;
+
         bool IsDeviceReady() override;
 
     private:

@@ -38,6 +38,12 @@ namespace LowLevelEmbedded::Devices::USBDevices
         return rmwRegister(0x0A, 0b00000100, flipped ? 0b00000100 : 0);
     }
 
+    bool TUSB546::SwapHDP_IN_Pins(bool swapped) const
+    {
+        return rmwRegister(0x0A, 0b00100000, swapped ? 0b00100000 : 0);
+    }
+
+
     bool TUSB546::IsDeviceReady()
     {
         return i2c_->I2C_IsDeviceReady(i2cAddress_);
