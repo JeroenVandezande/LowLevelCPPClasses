@@ -43,6 +43,12 @@ namespace LowLevelEmbedded::Devices::USBDevices
         return rmwRegister(0x0A, 0b00100000, swapped ? 0b00100000 : 0);
     }
 
+    bool TUSB546::DisableAuxSnoop(bool disable) const
+    {
+        return rmwRegister(0x13, 0b10000000, disable ? 0b10000000 : 0);
+    }
+
+
 
     bool TUSB546::IsDeviceReady()
     {
