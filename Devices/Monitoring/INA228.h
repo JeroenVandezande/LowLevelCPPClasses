@@ -10,8 +10,9 @@ namespace LowLevelEmbedded::Devices::Monitoring
         // Configuration (Table 7-5 in Datasheet)
         float ExpectedCurrent;
         bool AdcRange;
-        uint8_t ConversionDelay;
-        bool TemperatureCompensation;
+        uint8_t ConversionDelay; // Steps of 2ms each (0-510ms)
+        bool UseTemperatureCompensation;
+        uint16_t TemperatureCompensationPPM;
         // ADC Configuration (Table 7-6 in Datasheet)
         uint8_t Mode = 0xF; // Stored in Lower Nibble (Table 7-6 in Datasheet)
         uint8_t VBUSConversionTime = 0x0; // 50-4120us (0h-7h) (Table 7-6 in Datasheet)
@@ -29,7 +30,7 @@ namespace LowLevelEmbedded::Devices::Monitoring
      * over a specified I2C connection. It includes capabilities to measure voltage,
      * current, and power over the connected channel using a defined sense resistor.
      */
-    class INA228
+    class INA228 : II2CDevice
     {
     private:
         II2CAccess* _i2CAccess;
@@ -240,6 +241,6 @@ namespace LowLevelEmbedded::Devices::Monitoring
          *
          * @return True if device is present, false otherwise.
          */
-        bool IsDevicePresent();
+        bool IsDeviceReady() override;
     };
 }

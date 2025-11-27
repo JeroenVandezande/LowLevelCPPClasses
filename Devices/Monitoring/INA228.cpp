@@ -134,7 +134,7 @@ namespace LowLevelEmbedded::Devices::Monitoring
         _config = config;
 
         // Check if device is present
-        if (!IsDevicePresent())
+        if (!IsDeviceReady())
             return false;
 
         // Reset device - set bit 15 in CONFIG register
@@ -155,7 +155,7 @@ namespace LowLevelEmbedded::Devices::Monitoring
         // Set Config register
         configValue |= (_config.AdcRange ? 0x0010 : 0x0000);
         configValue |= static_cast<uint16_t>(_config.ConversionDelay) << 6;
-        configValue |= (_config.TemperatureCompensation ? 0x0020 : 0x0000);
+        configValue |= (_config.UseTemperatureCompensation ? 0x0020 : 0x0000);
 
         // Write new configuration
         if (!write16bitWord(CONFIG, configValue))
@@ -173,7 +173,15 @@ namespace LowLevelEmbedded::Devices::Monitoring
         if (!write16bitWord(ADC_CONFIG, adcConfig))
             return false;
 
-        return calibrate(_config.ExpectedCurrent); // Default calibration for 10A max
+        if (_config.UseTemperatureCompensation)
+        {
+            if (!SetShuntTemperatureCoefficient(_config.UseTemperatureCompensation))
+            {
+                return false;
+            }
+        }
+
+        return calibrate(_config.ExpectedCurrent);
     }
 
     bool INA228::SetShuntTemperatureCoefficient(const uint16_t coefficient)
@@ -206,12 +214,16 @@ namespace LowLevelEmbedded::Devices::Monitoring
 
     float INA228::ReadBusVoltage()
     {
-        uint32_t vbusRaw = 0;
-        if (!read24bitWord(VBUS, vbusRaw))
+        uint32_t reg24 = 0;
+        if (!read24bitWord(VBUS, reg24))
             return 0.0f;
 
-        // First four bits reserved
-        vbusRaw = vbusRaw >> 4;
+        // Sign-extend from 24-bit two's complement
+        if (reg24 & 0x800000)          // bit 23 = sign
+            reg24 |= 0xFF000000;       // extend to 32 bits
+
+        // 4 reserved LSBs (bits 3..0)
+        int32_t vbusRaw = static_cast<int32_t>(reg24) >> 4;  // arithmetic shift
 
         // Bus Voltage LSB = 195.3125 μV/bit per datasheet
         constexpr float vbusLSB = 195.3125e-6f;
@@ -475,20 +487,15 @@ namespace LowLevelEmbedded::Devices::Monitoring
     }
 
 
-    bool INA228::IsDevicePresent()
+    bool INA228::IsDeviceReady()
     {
         uint16_t manufacturerId = 0;
         if (!read16bitWord(MANUFACTURER_ID, manufacturerId))
             return false;
 
-        uint16_t deviceId = 0;
-        if (!read16bitWord(DEVICE_ID, deviceId))
-            return false;
-
         // Expected values from datasheet:
         // Manufacturer ID: 0x5449 (TI in ASCII)
-        // Device ID: 0x2281 for INA228
-        return (manufacturerId == 0x5449) && ((deviceId & 0xFFF0) == 0x2280);
+        return (manufacturerId == 0x5449);
     }
 
 }
