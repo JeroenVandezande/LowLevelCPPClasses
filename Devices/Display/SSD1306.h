@@ -61,6 +61,7 @@ namespace LowLevelEmbedded::Devices::Display
 
     typedef DISPLAY_VERTEX SSD1306_VERTEX;
 
+    template <bool Rotate90>
     class SSD1306 : public IDisplay<SSD1306_COLOR>
     {
     private:

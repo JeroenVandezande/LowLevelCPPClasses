@@ -181,6 +181,16 @@ namespace LowLevelEmbedded::Devices::Monitoring
             }
         }
 
+        uint16_t diagConfig = 0;
+        diagConfig ^= (-static_cast<uint16_t>(_config.LatchAlert) ^ diagConfig) & (1u << 15);
+        diagConfig ^= (-static_cast<uint16_t>(_config.ConversionReadyAssert) ^ diagConfig) & (1u << 14);
+        diagConfig ^= (-static_cast<uint16_t>(_config.ConversionDelay) ^ diagConfig) & (1u << 13);
+        diagConfig ^= (-static_cast<uint16_t>(_config.AlertPolarity) ^ diagConfig) & (1u << 12);
+        if (!write16bitWord(CONFIG, diagConfig))
+        {
+            return false;
+        }
+
         return calibrate(_config.ExpectedCurrent);
     }
 
@@ -442,15 +452,30 @@ namespace LowLevelEmbedded::Devices::Monitoring
         return write16bitWord(CONFIG, config);
     }
 
-    uint16_t INA228::ReadAlertStatus()
+    bool INA228::ReadAlertStatus(INA228_DiagAlertStatus& alert_status)
     {
         uint16_t alertStatus;
         if (!read16bitWord(DIAG_ALRT, alertStatus))
         {
-            return 0;
+            return false;
         }
 
-        return alertStatus;
+        alert_status
+        =
+        {
+            !!((alertStatus) & (1<<11)),
+            !!((alertStatus) & (1<<10)),
+            !!((alertStatus) & (1<<9)),
+            !!((alertStatus) & (1<<7)),
+            !!((alertStatus) & (1<<6)),
+            !!((alertStatus) & (1<<5)),
+            !!((alertStatus) & (1<<4)),
+            !!((alertStatus) & (1<<3)),
+            !!((alertStatus) & (1<<2)),
+            !((alertStatus) & (1<<0))
+        };
+
+        return true;
     }
 
     bool INA228::Reset(bool resetConfiguration)

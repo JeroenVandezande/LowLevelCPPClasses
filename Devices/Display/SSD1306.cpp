@@ -56,7 +56,8 @@ namespace LowLevelEmbedded::Devices::Display
     #define SSD1306_DATA                                   1
     #define SSD1306_COMMAND                                0
 
-    SSD1306::SSD1306(II2CAccess* i2cPort, uint8_t address)
+    template <bool Rotate90>
+    SSD1306<Rotate90>::SSD1306(II2CAccess* i2cPort, uint8_t address)
         : i2c_Access(i2cPort), spi_Access(nullptr), isSPI(false), address(address)
     {
         memset(Buffer, 0, SSD1306_BUFFER_SIZE);
@@ -66,7 +67,8 @@ namespace LowLevelEmbedded::Devices::Display
         Display.DisplayOn = 0;
     }
 
-    SSD1306::SSD1306(ISPIAccess* spiPort, SPIMode mode, uint8_t csID)
+    template <bool Rotate90>
+    SSD1306<Rotate90>::SSD1306(ISPIAccess* spiPort, SPIMode mode, uint8_t csID)
         : i2c_Access(nullptr), spi_Access(spiPort), isSPI(true), csPin(csID), mode(mode)
     {
         memset(Buffer, 0, SSD1306_BUFFER_SIZE);
@@ -76,7 +78,8 @@ namespace LowLevelEmbedded::Devices::Display
         Display.DisplayOn = 0;
     }
 
-    void SSD1306::Init()
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::Init()
     {
         // Wait for the screen to boot
         Utility::Delay_ms(100);
@@ -116,7 +119,7 @@ namespace LowLevelEmbedded::Devices::Display
         }
 
         // Inverse Color
-        if (isMirroredVertically)
+        if (isInverseColor)
         {
             WriteCommand(SSD1306_COMMAND_INVERT_DISPLAY);                            // 0xA7
         }
@@ -206,14 +209,16 @@ namespace LowLevelEmbedded::Devices::Display
 
 
 
-    void SSD1306::Fill(SSD1306_COLOR color)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::Fill(SSD1306_COLOR color)
     {
         // Fill buffer with selected color
         memset(Buffer, (color == Black) ? 0x00 : 0xFF, sizeof(Buffer));
     }
 
     /* Write the screenbuffer with changed to the screen */
-    void SSD1306::UpdateScreen()
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::UpdateScreen()
     {
         // Write data to each page of RAM. Number of pages
         // depends on the screen height:
@@ -233,8 +238,17 @@ namespace LowLevelEmbedded::Devices::Display
         }
     }
 
-    void SSD1306::DrawPixel(uint8_t x, uint8_t y, SSD1306_COLOR color)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::DrawPixel(uint8_t x, uint8_t y, SSD1306_COLOR color)
     {
+        // Translate x and y to be rotated 90 deg
+        if constexpr (Rotate90)
+        {
+            uint8_t temp = y;
+            y = SSD1306_HEIGHT - x - 1;
+            x = temp;
+        }
+
         if (x >= SSD1306_WIDTH || y >= SSD1306_HEIGHT)
         {
             // Don't write outside the buffer
@@ -252,7 +266,8 @@ namespace LowLevelEmbedded::Devices::Display
         }
     }
 
-    char SSD1306::WriteChar(char ch, Display_Font_t Font, SSD1306_COLOR color)
+    template <bool Rotate90>
+    char SSD1306<Rotate90>::WriteChar(char ch, Display_Font_t Font, SSD1306_COLOR color)
     {
         uint32_t i, b, j;
 
@@ -263,11 +278,23 @@ namespace LowLevelEmbedded::Devices::Display
         // Char width is not equal to font width for proportional font
         const uint8_t char_width = Font.char_width ? Font.char_width[ch-32] : Font.width;
         // Check remaining space on current line
-        if (SSD1306_WIDTH < (Display.CurrentX + char_width) ||
-            SSD1306_HEIGHT < (Display.CurrentY + Font.height))
+        if constexpr (Rotate90)
         {
-            // Not enough space on current line
-            return 0;
+            if (SSD1306_HEIGHT < (Display.CurrentX + char_width) ||
+                SSD1306_WIDTH < (Display.CurrentY + Font.height))
+            {
+                // Not enough space on current line
+                return 0;
+            }
+        }
+        else
+        {
+            if (SSD1306_WIDTH < (Display.CurrentX + char_width) ||
+                SSD1306_HEIGHT < (Display.CurrentY + Font.height))
+            {
+                // Not enough space on current line
+                return 0;
+            }
         }
 
         // Use the font to write
@@ -289,7 +316,8 @@ namespace LowLevelEmbedded::Devices::Display
         return ch;
     }
 
-    char SSD1306::WriteString(char* str, Display_Font_t Font, SSD1306_COLOR color)
+    template <bool Rotate90>
+    char SSD1306<Rotate90>::WriteString(char* str, Display_Font_t Font, SSD1306_COLOR color)
     {
         // Write until null-byte
         while (*str)
@@ -308,13 +336,15 @@ namespace LowLevelEmbedded::Devices::Display
         return *str;
     }
 
-    void SSD1306::SetCursor(uint8_t x, uint8_t y)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::SetCursor(uint8_t x, uint8_t y)
     {
         Display.CurrentX = x;
         Display.CurrentY = y;
     }
 
-    void SSD1306::Line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, SSD1306_COLOR color)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::Line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, SSD1306_COLOR color)
     {
         int dx = (x2 >= x1) ? x2 - x1 : x1 - x2;
         int dy = (y2 >= y1) ? y2 - y1 : y1 - y2;
@@ -346,7 +376,8 @@ namespace LowLevelEmbedded::Devices::Display
         }
     }
 
-    void SSD1306::DrawArc(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep, SSD1306_COLOR color)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::DrawArc(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep, SSD1306_COLOR color)
     {
         float sx = (float)cos(DegToRad(start_angle));
         float sy = (float)sin(DegToRad(start_angle));
@@ -362,7 +393,8 @@ namespace LowLevelEmbedded::Devices::Display
         }
     }
 
-    void SSD1306::DrawArcWithRadiusLine(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep, SSD1306_COLOR color)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::DrawArcWithRadiusLine(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep, SSD1306_COLOR color)
     {
         DrawArc(x, y, radius, start_angle, sweep, color);
         float sx = (float)cos(DegToRad(start_angle));
@@ -375,7 +407,8 @@ namespace LowLevelEmbedded::Devices::Display
         Line(x, y, x + ex * radius, y + ey * radius, color);
     }
 
-    void SSD1306::DrawCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, SSD1306_COLOR color)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::DrawCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, SSD1306_COLOR color)
     {
         int32_t x = -par_r;
         int32_t y = 0;
@@ -408,7 +441,8 @@ namespace LowLevelEmbedded::Devices::Display
         } while (x <= 0);
     }
 
-    void SSD1306::FillCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, SSD1306_COLOR par_color)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::FillCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, SSD1306_COLOR par_color)
     {
         int32_t x = -par_r;
         int32_t y = 0;
@@ -442,7 +476,8 @@ namespace LowLevelEmbedded::Devices::Display
         } while (x <= 0);
     }
 
-    void SSD1306::Polyline(const DISPLAY_VERTEX* par_vertex, uint16_t par_size, SSD1306_COLOR color)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::Polyline(const DISPLAY_VERTEX* par_vertex, uint16_t par_size, SSD1306_COLOR color)
     {
         if (par_size < 2)
             return;
@@ -453,7 +488,8 @@ namespace LowLevelEmbedded::Devices::Display
         }
     }
 
-    void SSD1306::DrawRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, SSD1306_COLOR color)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::DrawRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, SSD1306_COLOR color)
     {
         Line(x1, y1, x2, y1, color);
         Line(x1, y1, x1, y2, color);
@@ -461,7 +497,8 @@ namespace LowLevelEmbedded::Devices::Display
         Line(x1, y2, x2, y2, color);
     }
 
-    void SSD1306::FillRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, SSD1306_COLOR color)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::FillRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, SSD1306_COLOR color)
     {
         for (uint8_t y = y1; y <= y2; y++)
         {
@@ -472,7 +509,8 @@ namespace LowLevelEmbedded::Devices::Display
         }
     }
 
-    Display_Error_t SSD1306::InvertRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
+    template <bool Rotate90>
+    Display_Error_t SSD1306<Rotate90>::InvertRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
     {
         // Boundary check
         if ((x1 >= SSD1306_WIDTH) || (y1 >= SSD1306_HEIGHT) || (x2 >= SSD1306_WIDTH) || (y2 >= SSD1306_HEIGHT))
@@ -494,7 +532,8 @@ namespace LowLevelEmbedded::Devices::Display
         return DISPLAY_OK;
     }
 
-    void SSD1306::DrawBitmap(uint8_t x, uint8_t y, const unsigned char* bitmap, uint8_t w, uint8_t h, SSD1306_COLOR color)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::DrawBitmap(uint8_t x, uint8_t y, const unsigned char* bitmap, uint8_t w, uint8_t h, SSD1306_COLOR color)
     {
         int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
         uint8_t byte = 0;
@@ -520,30 +559,34 @@ namespace LowLevelEmbedded::Devices::Display
     }
 
     // Mirrors display. Re-init and screen clear should be ran after.
-    void SSD1306::MirrorHorizontally(bool isMirrored)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::MirrorHorizontally(bool isMirrored)
     {
         isMirroredHorizontally = isMirrored;
     }
 
     // Mirrors display. Re-init and screen clear should be ran after.
-    void SSD1306::MirrorVertically(bool isMirrored)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::MirrorVertically(bool isMirrored)
     {
         isMirroredVertically = isMirrored;
     }
 
-    void SSD1306::InverseColor(bool isInverse)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::InverseColor(bool isInverse)
     {
         isInverseColor = isInverse;
     }
 
-
-    void SSD1306::SetContrast(const uint8_t value)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::SetContrast(const uint8_t value)
     {
         WriteCommand(0x81);    // Set contrast control
         WriteCommand(value);
     }
 
-    void SSD1306::SetDisplayOn(const bool on)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::SetDisplayOn(const bool on)
     {
         if (on)
         {
@@ -557,19 +600,22 @@ namespace LowLevelEmbedded::Devices::Display
         }
     }
 
-    bool SSD1306::GetDisplayOn() const
+    template <bool Rotate90>
+    bool SSD1306<Rotate90>::GetDisplayOn() const
     {
         return Display.DisplayOn;
     }
 
-    void SSD1306::Reset()
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::Reset()
     {
         // TODO: Reset the display using the reset pin if provided
         Init();
     }
 
     // Private methods
-    void SSD1306::WriteCommand(uint8_t byte)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::WriteCommand(uint8_t byte)
     {
         uint8_t buffer[2];
         buffer[0] = byte;
@@ -586,7 +632,8 @@ namespace LowLevelEmbedded::Devices::Display
         }
     }
 
-    void SSD1306::WriteData(uint8_t* buffer, size_t buff_size)
+    template <bool Rotate90>
+    void SSD1306<Rotate90>::WriteData(uint8_t* buffer, size_t buff_size)
     {
         if (isSPI)
         {
@@ -600,12 +647,14 @@ namespace LowLevelEmbedded::Devices::Display
         }
     }
 
-    float SSD1306::DegToRad(float par_deg)
+    template <bool Rotate90>
+    float SSD1306<Rotate90>::DegToRad(float par_deg)
     {
         return par_deg * 3.14159265359f / 180.0f;
     }
 
-    uint16_t SSD1306::NormalizeTo0_360(uint16_t par_deg)
+    template <bool Rotate90>
+    uint16_t SSD1306<Rotate90>::NormalizeTo0_360(uint16_t par_deg)
     {
         uint16_t loc_angle = par_deg % 360;
         if (loc_angle < 0)
@@ -614,3 +663,6 @@ namespace LowLevelEmbedded::Devices::Display
         return loc_angle;
     }
 }
+
+template class LowLevelEmbedded::Devices::Display::SSD1306<false>;
+template class LowLevelEmbedded::Devices::Display::SSD1306<true>;

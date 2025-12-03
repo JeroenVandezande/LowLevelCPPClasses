@@ -13,6 +13,7 @@ namespace LowLevelEmbedded::Devices::Monitoring
         uint8_t ConversionDelay; // Steps of 2ms each (0-510ms)
         bool UseTemperatureCompensation;
         uint16_t TemperatureCompensationPPM;
+
         // ADC Configuration (Table 7-6 in Datasheet)
         uint8_t Mode = 0xF; // Stored in Lower Nibble (Table 7-6 in Datasheet)
         uint8_t VBUSConversionTime = 0x0; // 50-4120us (0h-7h) (Table 7-6 in Datasheet)
@@ -20,6 +21,25 @@ namespace LowLevelEmbedded::Devices::Monitoring
         uint8_t TemperatureConversionTime = 0x0; // 50-4120us (0h-7h) (Table 7-6 in Datasheet)
         uint8_t AverageCount = 0x0; // 1-1024 (0h-7h) (Table 7-6 in Datasheet)
 
+        // Diagnostic Alert Configuration (Table 7-16)
+        bool LatchAlert = false;
+        bool ConversionReadyAssert = false;
+        bool SlowAlert = false;
+        bool AlertPolarity = false;
+    };
+
+    struct INA228_DiagAlertStatus
+    {
+        bool EnergyRegisterOverflow;
+        bool ChargeRegisterOverflow;
+        bool MathErrorOverflow;
+        bool TemperatureOverLimit;
+        bool ShuntVoltageOverLimit;
+        bool ShuntVoltageUnderLimit;
+        bool BusVoltageOverLimit;
+        bool BusVoltageUnderLimit;
+        bool PowerOverLimit;
+        bool MemoryChecksumError;
     };
 
     /**
@@ -224,9 +244,10 @@ namespace LowLevelEmbedded::Devices::Monitoring
         /**
          * @brief Reads the alert status register.
          *
-         * @return The raw alert status register value. 0 if reading fails.
+         * @param alert_status out parameter for the alert status register
+         * @return True if reset is successful, false otherwise.
          */
-        uint16_t ReadAlertStatus();
+        bool ReadAlertStatus(INA228_DiagAlertStatus& alert_status);
 
         /**
          * @brief Reset.
