@@ -13,30 +13,30 @@
 #define ACC_DEC_TIME_REFERENCE POW2_41 / (CONTROLLERCLOCK * CONTROLLERCLOCK)
 
 
-inline int32_t SpeedPPSToMotorUnits(int32_t aPPS)
+inline int32_t SpeedPPSToMotorUnits(const int32_t aPPS)
 {
 	return (int32_t) round((float)aPPS * VELOCITY_TIME_REFERENCE);
 }
 
-inline int32_t AccDecPPSToMotorUnits(int32_t aPPS)
+inline int32_t AccDecPPSToMotorUnits(const int32_t aPPS)
 {
 	return (int32_t) round((float)aPPS * ACC_DEC_TIME_REFERENCE);
 }
 
-inline int32_t RPMToPPS(float aRPM, uint32_t stepsPerRevolution)
+inline int32_t RPMToPPS(const float aRPM, const uint32_t stepsPerRevolution)
 {
   float rps = aRPM / 60.0; //rotations per second
   float pps = rps * stepsPerRevolution; //steps per round
   return pps;
 }
 
-inline int32_t RPMToTStep(float aRPM, uint32_t stepsPerRevolution)
+inline int32_t RPMToTStep(const float aRPM, const uint32_t stepsPerRevolution)
 {
 	float pps = RPMToPPS(aRPM, stepsPerRevolution); //steps per round
 	return SpeedPPSToMotorUnits(pps);
 }
 
-inline uint32_t mSToMotorUnits(uint16_t aTimeInmS)
+inline uint32_t mSToMotorUnits(const uint16_t aTimeInmS)
 {
 	return (CONTROLLERCLOCK / 1000) * aTimeInmS;
 }
