@@ -171,7 +171,7 @@ bool tmc_tableIsReflected(const uint8_t index)
 	{
 	    return false;
 	}
-    
+
 	return CRCTables[index].isReflected;
 }
 

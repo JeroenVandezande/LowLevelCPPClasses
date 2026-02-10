@@ -57,7 +57,7 @@ namespace LowLevelEmbedded::Devices::Display
     #define SSD1306_COMMAND                                0
 
     template <bool Rotate90>
-    SSD1306<Rotate90>::SSD1306(II2CAccess* i2cPort, uint8_t address)
+    SSD1306<Rotate90>::SSD1306(II2CAccess* i2cPort, const uint8_t address)
         : i2c_Access(i2cPort), spi_Access(nullptr), isSPI(false), address(address)
     {
         memset(Buffer, 0, SSD1306_BUFFER_SIZE);
@@ -68,7 +68,7 @@ namespace LowLevelEmbedded::Devices::Display
     }
 
     template <bool Rotate90>
-    SSD1306<Rotate90>::SSD1306(ISPIAccess* spiPort, SPIMode mode, uint8_t csID)
+    SSD1306<Rotate90>::SSD1306(ISPIAccess* spiPort, const SPIMode mode, uint8_t csID)
         : i2c_Access(nullptr), spi_Access(spiPort), isSPI(true), csPin(csID), mode(mode)
     {
         memset(Buffer, 0, SSD1306_BUFFER_SIZE);
