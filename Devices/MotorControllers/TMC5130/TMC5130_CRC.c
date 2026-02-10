@@ -83,35 +83,30 @@ static uint32_t flipBitsInBytes(uint32_t value);
  *     right-shift the uint32_t by 8 and increment the table pointer.
  *     After 4 iterations of that all 4 bytes of the uint32_t are stored in the table.
  */
-uint8_t tmc_fillCRC8Table(uint8_t polynomial, bool isReflected, uint8_t index)
+uint8_t tmc_fillCRC8Table(const uint8_t polynomial, const bool isReflected, const uint8_t index)
 {
-	uint32_t CRCdata;
-	// Helper pointer for traversing the result table
-	uint8_t *table;
-
-	if(index >= CRC_TABLE_COUNT)
-		return 0;
-
+    if(index >= CRC_TABLE_COUNT)
+    {
+        return 0;
+    }
 	CRCTables[index].polynomial   = polynomial;
 	CRCTables[index].isReflected  = isReflected;
-	table = &CRCTables[index].table[0];
+	uint8_t* table = &CRCTables[index].table[0];
 
 	// Extend the polynomial to correct byte MSBs shifting into next bytes
-	uint32_t poly = (uint32_t) polynomial | 0x0100;
+	const uint32_t poly = (uint32_t) polynomial | 0x0100;
 
 	// Iterate over all 256 possible uint8_t values, compressed into a uint32_t (see detailed explanation above)
-	uint32_t i;
-	for(i = 0x03020100; i != 0x04030200; i+=0x04040404)
+    for(uint32_t i = 0x03020100; i != 0x04030200; i+=0x04040404)
 	{
 		// For reflected table: Flip the bits of each input byte
-		CRCdata = (isReflected)? flipBitsInBytes(i) : i;
+		uint32_t CRCdata = (isReflected) ? flipBitsInBytes(i) : i;
 
 		// Iterate over 8 Bits
-		int j;
-		for(j = 0; j < 8; j++)
+        for(int j = 0; j < 8; j++)
 		{
 			// Store value of soon-to-be shifted out byte
-			uint8_t isMSBSet = (CRCdata & 0x80000000)? 1:0;
+			const uint8_t isMSBSet = (CRCdata & 0x80000000)? 1:0;
 
 			// CRC Shift
 			CRCdata <<= 1;
@@ -145,15 +140,14 @@ uint8_t tmc_fillCRC8Table(uint8_t polynomial, bool isReflected, uint8_t index)
  *     uint32_t bytes: The length of the data buffer.
  *     uint8_t index: The index of the CRC table to be used.
  */
-uint8_t tmc_CRC8(uint8_t *data, uint32_t bytes, uint8_t index)
+uint8_t tmc_CRC8(const uint8_t *data, uint32_t bytes, const uint8_t index)
 {
 	uint8_t result = 0;
-	uint8_t *table;
 
-	if(index >= CRC_TABLE_COUNT)
+    if(index >= CRC_TABLE_COUNT)
 		return 0;
 
-	table = &CRCTables[index].table[0];
+	const uint8_t* table = &CRCTables[index].table[0];
 
 	while(bytes--)
 		result = table[result ^ *data++];
@@ -161,19 +155,23 @@ uint8_t tmc_CRC8(uint8_t *data, uint32_t bytes, uint8_t index)
 	return (CRCTables[index].isReflected)? flipByte(result) : result;
 }
 
-uint8_t tmc_tableGetPolynomial(uint8_t index)
+uint8_t tmc_tableGetPolynomial(const uint8_t index)
 {
 	if(index >= CRC_TABLE_COUNT)
-		return 0;
+	{
+	    return 0;
+	}
 
 	return CRCTables[index].polynomial;
 }
 
-bool tmc_tableIsReflected(uint8_t index)
+bool tmc_tableIsReflected(const uint8_t index)
 {
 	if(index >= CRC_TABLE_COUNT)
-		return false;
-
+	{
+	    return false;
+	}
+    
 	return CRCTables[index].isReflected;
 }
 

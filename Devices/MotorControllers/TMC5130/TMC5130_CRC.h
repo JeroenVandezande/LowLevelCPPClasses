@@ -15,7 +15,7 @@
 	#define CRC_TABLE_COUNT 2
 
 	uint8_t tmc_fillCRC8Table(uint8_t polynomial, bool isReflected, uint8_t index);
-	uint8_t tmc_CRC8(uint8_t *data, uint32_t bytes, uint8_t index);
+	uint8_t tmc_CRC8(const uint8_t *data, uint32_t bytes, uint8_t index);
 
 	uint8_t tmc_tableGetPolynomial(uint8_t index);
 	bool  tmc_tableIsReflected(uint8_t index);
