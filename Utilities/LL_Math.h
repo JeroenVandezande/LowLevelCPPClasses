@@ -147,11 +147,11 @@ inline T ceilToClamped(const X x, const T min, const T max)
 
 #define LL_MATH_DEFINE_CLAMPED_CASTS(TYPE, NAME)                                                                   \
     /**                                                                                                            \
-     * Rounds a numeric value to the nearest integer and clamps it to the TYPE range.                              \
+     * Rounds a numeric value to the nearest integer and clamps it to the target return type range.               \
      *                                                                                                             \
      * @tparam X Numeric input type.                                                                               \
      * @param x Value to round and cast.                                                                           \
-     * @return Rounded value clamped to the TYPE range.                                                            \
+     * @return Rounded value clamped to the target return type range.                                             \
      */                                                                                                            \
     template<typename X>                                                                                           \
     inline TYPE roundTo##NAME##Clamped(const X x)                                                                  \
@@ -160,13 +160,13 @@ inline T ceilToClamped(const X x, const T min, const T max)
     }                                                                                                              \
                                                                                                                    \
     /**                                                                                                            \
-     * Rounds a numeric value to the nearest integer and clamps it to a caller-provided TYPE range.                \
+     * Rounds a numeric value to the nearest integer and clamps it to a caller-provided target return type range.  \
      *                                                                                                             \
      * @tparam X Numeric input type.                                                                               \
      * @param x Value to round and cast.                                                                           \
-     * @param min Minimum value returned after clamping.                                                           \
-     * @param max Maximum value returned after clamping.                                                           \
-     * @return Rounded value clamped to the provided range.                                                        \
+     * @param min Minimum value in the target return type after clamping.                                          \
+     * @param max Maximum value in the target return type after clamping.                                          \
+     * @return Rounded value clamped to the provided target return type range.                                     \
      */                                                                                                            \
     template<typename X>                                                                                           \
     inline TYPE roundTo##NAME##Clamped(const X x, const TYPE min, const TYPE max)                                  \
@@ -175,11 +175,11 @@ inline T ceilToClamped(const X x, const T min, const T max)
     }                                                                                                              \
                                                                                                                    \
     /**                                                                                                            \
-     * Floors a numeric value and clamps it to the TYPE range.                                                     \
+     * Floors a numeric value and clamps it to the target return type range.                                       \
      *                                                                                                             \
      * @tparam X Numeric input type.                                                                               \
      * @param x Value to floor and cast.                                                                           \
-     * @return Floored value clamped to the TYPE range.                                                            \
+     * @return Floored value clamped to the target return type range.                                              \
      */                                                                                                            \
     template<typename X>                                                                                           \
     inline TYPE floorTo##NAME##Clamped(const X x)                                                                  \
@@ -188,13 +188,13 @@ inline T ceilToClamped(const X x, const T min, const T max)
     }                                                                                                              \
                                                                                                                    \
     /**                                                                                                            \
-     * Floors a numeric value and clamps it to a caller-provided TYPE range.                                       \
+     * Floors a numeric value and clamps it to a caller-provided target return type range.                         \
      *                                                                                                             \
      * @tparam X Numeric input type.                                                                               \
      * @param x Value to floor and cast.                                                                           \
-     * @param min Minimum value returned after clamping.                                                           \
-     * @param max Maximum value returned after clamping.                                                           \
-     * @return Floored value clamped to the provided range.                                                        \
+     * @param min Minimum value in the target return type after clamping.                                          \
+     * @param max Maximum value in the target return type after clamping.                                          \
+     * @return Floored value clamped to the provided target return type range.                                     \
      */                                                                                                            \
     template<typename X>                                                                                           \
     inline TYPE floorTo##NAME##Clamped(const X x, const TYPE min, const TYPE max)                                  \
@@ -203,11 +203,11 @@ inline T ceilToClamped(const X x, const T min, const T max)
     }                                                                                                              \
                                                                                                                    \
     /**                                                                                                            \
-     * Ceils a numeric value and clamps it to the TYPE range.                                                      \
+     * Ceils a numeric value and clamps it to the target return type range.                                        \
      *                                                                                                             \
      * @tparam X Numeric input type.                                                                               \
      * @param x Value to ceil and cast.                                                                            \
-     * @return Ceiled value clamped to the TYPE range.                                                             \
+     * @return Ceiled value clamped to the target return type range.                                               \
      */                                                                                                            \
     template<typename X>                                                                                           \
     inline TYPE ceilTo##NAME##Clamped(const X x)                                                                   \
@@ -216,13 +216,13 @@ inline T ceilToClamped(const X x, const T min, const T max)
     }                                                                                                              \
                                                                                                                    \
     /**                                                                                                            \
-     * Ceils a numeric value and clamps it to a caller-provided TYPE range.                                        \
+     * Ceils a numeric value and clamps it to a caller-provided target return type range.                          \
      *                                                                                                             \
      * @tparam X Numeric input type.                                                                               \
      * @param x Value to ceil and cast.                                                                            \
-     * @param min Minimum value returned after clamping.                                                           \
-     * @param max Maximum value returned after clamping.                                                           \
-     * @return Ceiled value clamped to the provided range.                                                         \
+     * @param min Minimum value in the target return type after clamping.                                          \
+     * @param max Maximum value in the target return type after clamping.                                          \
+     * @return Ceiled value clamped to the provided target return type range.                                      \
      */                                                                                                            \
     template<typename X>                                                                                           \
     inline TYPE ceilTo##NAME##Clamped(const X x, const TYPE min, const TYPE max)                                   \
