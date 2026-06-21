@@ -5,7 +5,7 @@
 
 #include <cmath>
 
-inline uint8_t roundToByte(const float x)
+inline uint8_t roundToByteClamped(const float x)
 {
     if (x >= static_cast<float>(std::numeric_limits<uint8_t>::max()))
     {
@@ -20,7 +20,7 @@ inline uint8_t roundToByte(const float x)
     return static_cast<uint8_t>(round(x));
 }
 
-inline int8_t roundToSignedByte(const float x)
+inline int8_t roundToSignedByteClamped(const float x)
 {
     if (x >= static_cast<float>(std::numeric_limits<int8_t>::max()))
     {
@@ -35,7 +35,7 @@ inline int8_t roundToSignedByte(const float x)
     return static_cast<int8_t>(round(x));
 }
 
-inline int16_t roundToInt16(const float x)
+inline int16_t roundToInt16Clamped(const float x)
 {
     if (x >= static_cast<float>(std::numeric_limits<int16_t>::max()))
     {
@@ -50,7 +50,7 @@ inline int16_t roundToInt16(const float x)
     return static_cast<int16_t>(round(x));
 }
 
-inline uint16_t roundToUInt16(const float x)
+inline uint16_t roundToUInt16Clamped(const float x)
 {
     if (x >= static_cast<float>(std::numeric_limits<uint16_t>::max()))
     {
@@ -65,7 +65,7 @@ inline uint16_t roundToUInt16(const float x)
     return static_cast<uint16_t>(round(x));
 }
 
-inline uint32_t roundToUInt32(const float x)
+inline uint32_t roundToUInt32Clamped(const float x)
 {
     if (x >= static_cast<float>(std::numeric_limits<uint32_t>::max()))
     {
@@ -80,7 +80,7 @@ inline uint32_t roundToUInt32(const float x)
     return static_cast<uint32_t>(round(x));
 }
 
-inline int32_t roundToInt32(const float x)
+inline int32_t roundToInt32Clamped(const float x)
 {
     if (x >= static_cast<float>(std::numeric_limits<int32_t>::max()))
     {
