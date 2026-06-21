@@ -3,94 +3,242 @@
 //
 #pragma once
 
+#include <cstdint>
 #include <cmath>
+#include <limits>
 
-inline uint8_t roundToByteClamped(const float x)
+namespace ll_math_detail
 {
-    if (x >= static_cast<float>(std::numeric_limits<uint8_t>::max()))
+    enum class RoundCastMode
     {
-        return std::numeric_limits<uint8_t>::max();
+        Round,
+        Floor,
+        Ceil,
+    };
+
+    template<typename T>
+    inline T ClampValue(const long double x, const T min, const T max)
+    {
+        if (x >= static_cast<long double>(max))
+        {
+            return max;
+        }
+
+        if (x <= static_cast<long double>(min))
+        {
+            return min;
+        }
+
+        return static_cast<T>(x);
     }
 
-    if (x >= static_cast<float>(std::numeric_limits<uint8_t>::min()))
+    template<typename T>
+    inline T CastToClamped(const long double x, const T min, const T max, const RoundCastMode mode)
     {
-        return std::numeric_limits<uint8_t>::min();
+        switch (mode)
+        {
+            case RoundCastMode::Round:
+                return ClampValue(std::round(x), min, max);
+            case RoundCastMode::Floor:
+                return ClampValue(std::floor(x), min, max);
+            case RoundCastMode::Ceil:
+                return ClampValue(std::ceil(x), min, max);
+        }
+
+        return ClampValue(std::round(x), min, max);
     }
 
-    return static_cast<uint8_t>(round(x));
+    template<typename T, typename X>
+    inline T CastToClamped(const X x, const T min, const T max, const RoundCastMode mode)
+    {
+        return CastToClamped(static_cast<long double>(x), min, max, mode);
+    }
 }
 
-inline int8_t roundToSignedByteClamped(const float x)
+/**
+ * Rounds a numeric value to the nearest integer and clamps it to the full range of the requested return type.
+ *
+ * @tparam T Integer return type to cast to.
+ * @tparam X Numeric input type.
+ * @param x Value to round and cast.
+ * @return Rounded value clamped to std::numeric_limits<T>::min() and std::numeric_limits<T>::max().
+ */
+template<typename T, typename X>
+inline T roundToClamped(const X x)
 {
-    if (x >= static_cast<float>(std::numeric_limits<int8_t>::max()))
-    {
-        return std::numeric_limits<int8_t>::max();
-    }
-
-    if (x >= static_cast<float>(std::numeric_limits<int8_t>::min()))
-    {
-        return std::numeric_limits<int8_t>::min();
-    }
-
-    return static_cast<int8_t>(round(x));
+    return ll_math_detail::CastToClamped(x, std::numeric_limits<T>::min(), std::numeric_limits<T>::max(), ll_math_detail::RoundCastMode::Round);
 }
 
-inline int16_t roundToInt16Clamped(const float x)
+/**
+ * Rounds a numeric value to the nearest integer and clamps it to a caller-provided range.
+ *
+ * @tparam T Integer return type to cast to.
+ * @tparam X Numeric input type.
+ * @param x Value to round and cast.
+ * @param min Minimum value returned after clamping.
+ * @param max Maximum value returned after clamping.
+ * @return Rounded value clamped to the provided range.
+ */
+template<typename T, typename X>
+inline T roundToClamped(const X x, const T min, const T max)
 {
-    if (x >= static_cast<float>(std::numeric_limits<int16_t>::max()))
-    {
-        return std::numeric_limits<int16_t>::max();
-    }
-
-    if (x >= static_cast<float>(std::numeric_limits<int16_t>::min()))
-    {
-        return std::numeric_limits<int16_t>::min();
-    }
-
-    return static_cast<int16_t>(round(x));
+    return ll_math_detail::CastToClamped(x, min, max, ll_math_detail::RoundCastMode::Round);
 }
 
-inline uint16_t roundToUInt16Clamped(const float x)
+/**
+ * Floors a numeric value and clamps it to the full range of the requested return type.
+ *
+ * @tparam T Integer return type to cast to.
+ * @tparam X Numeric input type.
+ * @param x Value to floor and cast.
+ * @return Floored value clamped to std::numeric_limits<T>::min() and std::numeric_limits<T>::max().
+ */
+template<typename T, typename X>
+inline T floorToClamped(const X x)
 {
-    if (x >= static_cast<float>(std::numeric_limits<uint16_t>::max()))
-    {
-        return std::numeric_limits<uint16_t>::max();
-    }
-
-    if (x >= static_cast<float>(std::numeric_limits<uint16_t>::min()))
-    {
-        return std::numeric_limits<uint16_t>::min();
-    }
-
-    return static_cast<uint16_t>(round(x));
+    return ll_math_detail::CastToClamped(x, std::numeric_limits<T>::min(), std::numeric_limits<T>::max(), ll_math_detail::RoundCastMode::Floor);
 }
 
-inline uint32_t roundToUInt32Clamped(const float x)
+/**
+ * Floors a numeric value and clamps it to a caller-provided range.
+ *
+ * @tparam T Integer return type to cast to.
+ * @tparam X Numeric input type.
+ * @param x Value to floor and cast.
+ * @param min Minimum value returned after clamping.
+ * @param max Maximum value returned after clamping.
+ * @return Floored value clamped to the provided range.
+ */
+template<typename T, typename X>
+inline T floorToClamped(const X x, const T min, const T max)
 {
-    if (x >= static_cast<float>(std::numeric_limits<uint32_t>::max()))
-    {
-        return std::numeric_limits<uint32_t>::max();
-    }
-
-    if (x >= static_cast<float>(std::numeric_limits<uint32_t>::min()))
-    {
-        return std::numeric_limits<uint32_t>::min();
-    }
-
-    return static_cast<uint32_t>(round(x));
+    return ll_math_detail::CastToClamped(x, min, max, ll_math_detail::RoundCastMode::Floor);
 }
 
-inline int32_t roundToInt32Clamped(const float x)
+/**
+ * Ceils a numeric value and clamps it to the full range of the requested return type.
+ *
+ * @tparam T Integer return type to cast to.
+ * @tparam X Numeric input type.
+ * @param x Value to ceil and cast.
+ * @return Ceiled value clamped to std::numeric_limits<T>::min() and std::numeric_limits<T>::max().
+ */
+template<typename T, typename X>
+inline T ceilToClamped(const X x)
 {
-    if (x >= static_cast<float>(std::numeric_limits<int32_t>::max()))
-    {
-        return std::numeric_limits<int32_t>::max();
-    }
-
-    if (x >= static_cast<float>(std::numeric_limits<int32_t>::min()))
-    {
-        return std::numeric_limits<int32_t>::min();
-    }
-
-    return static_cast<int32_t>(round(x));
+    return ll_math_detail::CastToClamped(x, std::numeric_limits<T>::min(), std::numeric_limits<T>::max(), ll_math_detail::RoundCastMode::Ceil);
 }
+
+/**
+ * Ceils a numeric value and clamps it to a caller-provided range.
+ *
+ * @tparam T Integer return type to cast to.
+ * @tparam X Numeric input type.
+ * @param x Value to ceil and cast.
+ * @param min Minimum value returned after clamping.
+ * @param max Maximum value returned after clamping.
+ * @return Ceiled value clamped to the provided range.
+ */
+template<typename T, typename X>
+inline T ceilToClamped(const X x, const T min, const T max)
+{
+    return ll_math_detail::CastToClamped(x, min, max, ll_math_detail::RoundCastMode::Ceil);
+}
+
+#define LL_MATH_DEFINE_CLAMPED_CASTS(TYPE, NAME)                                                                   \
+    /**                                                                                                            \
+     * Rounds a numeric value to the nearest integer and clamps it to the TYPE range.                              \
+     *                                                                                                             \
+     * @tparam X Numeric input type.                                                                               \
+     * @param x Value to round and cast.                                                                           \
+     * @return Rounded value clamped to the TYPE range.                                                            \
+     */                                                                                                            \
+    template<typename X>                                                                                           \
+    inline TYPE roundTo##NAME##Clamped(const X x)                                                                  \
+    {                                                                                                              \
+        return roundToClamped<TYPE>(x);                                                                            \
+    }                                                                                                              \
+                                                                                                                   \
+    /**                                                                                                            \
+     * Rounds a numeric value to the nearest integer and clamps it to a caller-provided TYPE range.                \
+     *                                                                                                             \
+     * @tparam X Numeric input type.                                                                               \
+     * @param x Value to round and cast.                                                                           \
+     * @param min Minimum value returned after clamping.                                                           \
+     * @param max Maximum value returned after clamping.                                                           \
+     * @return Rounded value clamped to the provided range.                                                        \
+     */                                                                                                            \
+    template<typename X>                                                                                           \
+    inline TYPE roundTo##NAME##Clamped(const X x, const TYPE min, const TYPE max)                                  \
+    {                                                                                                              \
+        return roundToClamped<TYPE>(x, min, max);                                                                  \
+    }                                                                                                              \
+                                                                                                                   \
+    /**                                                                                                            \
+     * Floors a numeric value and clamps it to the TYPE range.                                                     \
+     *                                                                                                             \
+     * @tparam X Numeric input type.                                                                               \
+     * @param x Value to floor and cast.                                                                           \
+     * @return Floored value clamped to the TYPE range.                                                            \
+     */                                                                                                            \
+    template<typename X>                                                                                           \
+    inline TYPE floorTo##NAME##Clamped(const X x)                                                                  \
+    {                                                                                                              \
+        return floorToClamped<TYPE>(x);                                                                            \
+    }                                                                                                              \
+                                                                                                                   \
+    /**                                                                                                            \
+     * Floors a numeric value and clamps it to a caller-provided TYPE range.                                       \
+     *                                                                                                             \
+     * @tparam X Numeric input type.                                                                               \
+     * @param x Value to floor and cast.                                                                           \
+     * @param min Minimum value returned after clamping.                                                           \
+     * @param max Maximum value returned after clamping.                                                           \
+     * @return Floored value clamped to the provided range.                                                        \
+     */                                                                                                            \
+    template<typename X>                                                                                           \
+    inline TYPE floorTo##NAME##Clamped(const X x, const TYPE min, const TYPE max)                                  \
+    {                                                                                                              \
+        return floorToClamped<TYPE>(x, min, max);                                                                  \
+    }                                                                                                              \
+                                                                                                                   \
+    /**                                                                                                            \
+     * Ceils a numeric value and clamps it to the TYPE range.                                                      \
+     *                                                                                                             \
+     * @tparam X Numeric input type.                                                                               \
+     * @param x Value to ceil and cast.                                                                            \
+     * @return Ceiled value clamped to the TYPE range.                                                             \
+     */                                                                                                            \
+    template<typename X>                                                                                           \
+    inline TYPE ceilTo##NAME##Clamped(const X x)                                                                   \
+    {                                                                                                              \
+        return ceilToClamped<TYPE>(x);                                                                             \
+    }                                                                                                              \
+                                                                                                                   \
+    /**                                                                                                            \
+     * Ceils a numeric value and clamps it to a caller-provided TYPE range.                                        \
+     *                                                                                                             \
+     * @tparam X Numeric input type.                                                                               \
+     * @param x Value to ceil and cast.                                                                            \
+     * @param min Minimum value returned after clamping.                                                           \
+     * @param max Maximum value returned after clamping.                                                           \
+     * @return Ceiled value clamped to the provided range.                                                         \
+     */                                                                                                            \
+    template<typename X>                                                                                           \
+    inline TYPE ceilTo##NAME##Clamped(const X x, const TYPE min, const TYPE max)                                   \
+    {                                                                                                              \
+        return ceilToClamped<TYPE>(x, min, max);                                                                   \
+    }
+
+LL_MATH_DEFINE_CLAMPED_CASTS(int8_t, SignedByte)
+LL_MATH_DEFINE_CLAMPED_CASTS(uint8_t, Byte)
+LL_MATH_DEFINE_CLAMPED_CASTS(int8_t, Int8)
+LL_MATH_DEFINE_CLAMPED_CASTS(uint8_t, UInt8)
+LL_MATH_DEFINE_CLAMPED_CASTS(int16_t, Int16)
+LL_MATH_DEFINE_CLAMPED_CASTS(uint16_t, UInt16)
+LL_MATH_DEFINE_CLAMPED_CASTS(int32_t, Int32)
+LL_MATH_DEFINE_CLAMPED_CASTS(uint32_t, UInt32)
+LL_MATH_DEFINE_CLAMPED_CASTS(int64_t, Int64)
+LL_MATH_DEFINE_CLAMPED_CASTS(uint64_t, UInt64)
+
+#undef LL_MATH_DEFINE_CLAMPED_CASTS
