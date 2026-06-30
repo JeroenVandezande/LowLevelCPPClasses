@@ -23,6 +23,8 @@ A small CPM Package containing C++ objects for common embedded interfaces/device
 	* AD7175
 * **DACs**:
 	* DAC7578
+* **Displays**:
+	* SSD1306
 * **EEProms**:
 	* 24AA08
 * **Encoders**:
@@ -35,16 +37,22 @@ A small CPM Package containing C++ objects for common embedded interfaces/device
 	* TCA9548A
 * **Led Controller**:
 	* PCA9685
+* **Monitoring**:
+	* INA228
 * **Motor Controller**:
 	* TMC5130
 * **Power**:
 	* MPQ4262
+* **Sensors**:
+	* MPL3115A2
+	* SHT4x
 * **Thermopiles**
 	* MLX90614
 	* TSD305
 * **USB**:
 	* TCPP02
 	* TUSB544
+	* TUSB546
 * **8-Bit I/O Expanders**:
 	* MCP23S08
 	* PCA6408
