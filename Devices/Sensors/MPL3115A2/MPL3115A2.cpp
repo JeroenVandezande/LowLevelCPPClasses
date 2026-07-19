@@ -123,7 +123,7 @@ namespace LowLevelEmbedded
             /// @param[out] pressurePa Absolute pressure in Pascals on success.
             /// @return true on success, false on I2C error or measurement timeout.
             ///
-            bool MPL3115A2::ReadPressure(float& pressurePa)
+            bool MPL3115A2::ReadPressure(unitsnet_cpp::Pressure& pressure)
             {
                 uint8_t data[5];
                 if (!MeasureOnce(false, data)) return false;
@@ -131,7 +131,8 @@ namespace LowLevelEmbedded
                 uint32_t raw = (static_cast<uint32_t>(data[0]) << 12)
                              | (static_cast<uint32_t>(data[1]) << 4)
                              | (static_cast<uint32_t>(data[2]) >> 4);
-                pressurePa = static_cast<float>(raw) / 4.0f;
+                auto pressurePa = static_cast<float>(raw) / 4.0f;
+                pressure = unitsnet_cpp::Pressure::from_pascals(pressurePa);
                 return true;
             }
 
@@ -188,11 +189,11 @@ namespace LowLevelEmbedded
                 return temperatureC;
             }
 
-            float MPL3115A2::GetPressure()
+            unitsnet_cpp::Pressure MPL3115A2::GetPressure()
             {
-                float pressurePa = 0.0f;
-                ReadPressure(pressurePa);
-                return pressurePa;
+                unitsnet_cpp::Pressure pressure = unitsnet_cpp::Pressure::from_pascals(0.0f);
+                ReadPressure(pressure);
+                return pressure;
             }
         }
     }

@@ -7,6 +7,7 @@
 #include "LLE_I2C.h"
 #include "LLE_Temp.h"
 #include "LLE_Pressure.h"
+#include <Pressure.hpp>
 
 #include <cstdint>
 
@@ -67,7 +68,7 @@ namespace LowLevelEmbedded::Devices::Sensors
         void SetOversample(MPL3115A2_Oversample oversample) { _oversample = oversample; }
 
         /// Take a one-shot measurement and return absolute pressure in Pascals (Pa).
-        bool ReadPressure(float& pressurePa);
+        bool ReadPressure(unitsnet_cpp::Pressure& pressure);
         /// Take a one-shot measurement and return altitude in meters (m), referenced
         /// to the configured sea-level pressure (default 101326 Pa).
         bool ReadAltitude(float& altitudeM);
@@ -77,6 +78,6 @@ namespace LowLevelEmbedded::Devices::Sensors
         /// ITemperatureSensor: convenience wrapper, returns 0.0f on failure.
         float GetTemperature() override;
         /// IPressureSensor: convenience wrapper, returns 0.0f on failure.
-        float GetPressure() override;
+        unitsnet_cpp::Pressure GetPressure() override;
     };
 }

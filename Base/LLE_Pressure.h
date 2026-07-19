@@ -1,8 +1,10 @@
 //
-// Created by DanaNatov on 2026-06-30.
+// Created by Dana Natov on 2026-06-30.
 //
 
 #pragma once
+
+#include <Pressure.hpp>
 
 namespace LowLevelEmbedded
 {
@@ -11,7 +13,7 @@ namespace LowLevelEmbedded
      * @brief An interface for sensing barometric (absolute) pressure.
      *
      * This interface defines a contract for pressure sensors to implement. It provides
-     * the ability to read the absolute pressure in Pascals (Pa).
+     * the ability to read the absolute pressure in unitsnet_cpp::Pressure.
      */
     class IPressureSensor
     {
@@ -20,12 +22,12 @@ namespace LowLevelEmbedded
         /**
          * @brief Retrieves the current absolute pressure measurement.
          *
-         * This method returns the absolute pressure in Pascals (Pa). Sensors implementing
+         * This method returns the absolute pressure in unitsnet_cpp::Pressure. Sensors implementing
          * this method should provide real-time or near real-time data for the current
          * environmental conditions.
          *
-         * @return A float representing the absolute pressure in Pascals (Pa).
+         * @return A unitsnet_cpp::Pressure representing the absolute pressure.
          */
-        virtual float GetPressure() = 0;
+        virtual unitsnet_cpp::Pressure GetPressure() = 0;
     };
 }

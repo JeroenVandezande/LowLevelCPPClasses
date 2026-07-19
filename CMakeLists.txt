@@ -18,7 +18,7 @@ endforeach()
 list(REMOVE_DUPLICATES LIB_INCLUDE_DIRS)
 
 include(cpm/CPM.cmake)
-CPMAddPackage("gh:JeroenVandezande/unitsnet-cpp@1.2.0")
+CPMAddPackage("gh:JeroenVandezande/unitsnet-cpp@1.3.0")
 CPMAddPackage("gh:an-dr/microlog@6.5.0")
 
 target_compile_definitions( microlog
