@@ -18,6 +18,7 @@ endforeach()
 list(REMOVE_DUPLICATES LIB_INCLUDE_DIRS)
 
 include(cpm/CPM.cmake)
+CPMAddPackage("gh:JeroenVandezande/unitsnet-cpp@1.2.0")
 CPMAddPackage("gh:an-dr/microlog@6.5.0")
 
 target_compile_definitions( microlog
@@ -25,7 +26,11 @@ target_compile_definitions( microlog
         ULOG_EXTRA_OUTPUTS=1
         FEATURE_COLOR=1)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC microlog)
+target_compile_definitions( unitsnet_cpp
+        INTERFACE
+        UNITSNET_CPP_USE_FLOAT=1)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC unitsnet_cpp microlog)
 
 target_include_directories (${PROJECT_NAME} PUBLIC ${LIB_INCLUDE_DIRS})
 

@@ -1,9 +1,5 @@
-//
-// Created by Jeroe on 2025-06-22.
-//
+#pragma once
 
-#ifndef I2CMULTIPLEXER_BASE_H
-#define I2CMULTIPLEXER_BASE_H
 #include "LLE_I2C.h"
 
 namespace LowLevelEmbedded
@@ -83,7 +79,7 @@ namespace LowLevelEmbedded
         bool I2C_ReadWriteMethod(uint8_t address, uint8_t* data, size_t readLength, size_t writeLength) override;
         bool I2C_Mem_Read(uint8_t address, uint8_t memAddress, uint8_t memAddsize, uint8_t* data,
                           size_t readLength) override;
-        bool I2C_Mem_Write(uint8_t address, uint8_t memAddress, uint8_t memAddsize, uint8_t* data, size_t writeLength);
+        bool I2C_Mem_Write(uint8_t address, uint8_t memAddress, uint8_t memAddsize, uint8_t* data, size_t writeLength) override;
         bool I2C_IsDeviceReady(uint8_t address) override;
 
     private:
@@ -99,4 +95,3 @@ namespace LowLevelEmbedded
     };
 }
 
-#endif //I2CMULTIPLEXER_BASE_H
