@@ -17,7 +17,18 @@ foreach(hdr IN LISTS LIB_INCLUDES)
 endforeach()
 list(REMOVE_DUPLICATES LIB_INCLUDE_DIRS)
 
-include(cpm/CPM.cmake)
+if (NOT COMMAND CPMAddPackage)
+    # Download CPM.cmake
+    set(CPM_VERSION 0.43.1)
+    message("Downloading CPM Package Manager version ${CPM_VERSION}")
+    file(
+            DOWNLOAD
+            https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_VERSION}/CPM.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/CPM_${CPM_VERSION}.cmake
+    )
+    include("${CMAKE_CURRENT_BINARY_DIR}/CPM_${CPM_VERSION}.cmake")
+endif ()
+
 CPMAddPackage("gh:JeroenVandezande/unitsnet-cpp@1.3.0")
 CPMAddPackage("gh:an-dr/microlog@6.5.0")
 
