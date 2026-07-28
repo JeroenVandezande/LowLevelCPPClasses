@@ -6,6 +6,7 @@
 #define PCA9685_H
 
 #include "../../Base/LLE_I2C.h"
+#include <Frequency.hpp>
 
 #define BASE_ADDRESS 0b10000000
 #define CHIPCLK 25000000
@@ -38,7 +39,7 @@ namespace LowLevelEmbedded
             private:
                 II2CAccess *_I2CAccess;
                 uint8_t _SlaveAddress;
-                uint16_t _PWMfrequency;
+                unitsnet_cpp::Frequency _PWMfrequency;
                 enum PCA9685_OutputMode_t _OutputMode;
                 bool _InvertOutputs;
             public:
@@ -50,7 +51,7 @@ namespace LowLevelEmbedded
                 /// \param invertOutputs Inverts the output logic state (INVRT)
                 PCA9685(II2CAccess* i2CAccess,
                     uint8_t address,
-                    uint16_t pwmfrequency,
+                    unitsnet_cpp::Frequency pwmfrequency,
                     enum PCA9685_OutputMode_t outputMode,
                     bool invertOutputs);
                 void WritePWM(uint8_t channel, uint16_t pwm);

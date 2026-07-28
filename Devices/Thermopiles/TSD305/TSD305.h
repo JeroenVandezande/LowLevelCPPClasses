@@ -7,6 +7,7 @@
 
 #include "../../../Base/LLE_I2C.h"
 #include "TSD305_Constants.h"
+#include <Temperature.hpp>
 
 namespace LowLevelEmbedded
 {
@@ -38,12 +39,27 @@ namespace LowLevelEmbedded
                 TSD305_Constants::ErrorCode CheckStatusByte(uint8_t statusByte);
 
             public:
-                int16_t MinSenTemp() const { return minSenTemp; }
-                int16_t MaxSenTemp() const { return maxSenTemp; }
-                int16_t MinObjTemp() const { return minObjTemp; }
-                int16_t MaxObjTemp() const { return maxObjTemp; }
+                unitsnet_cpp::Temperature MinSenTemp() const
+                {
+                    return unitsnet_cpp::Temperature::from_degrees_celsius(minSenTemp);
+                }
+                unitsnet_cpp::Temperature MaxSenTemp() const
+                {
+                    return unitsnet_cpp::Temperature::from_degrees_celsius(maxSenTemp);
+                }
+                unitsnet_cpp::Temperature MinObjTemp() const
+                {
+                    return unitsnet_cpp::Temperature::from_degrees_celsius(minObjTemp);
+                }
+                unitsnet_cpp::Temperature MaxObjTemp() const
+                {
+                    return unitsnet_cpp::Temperature::from_degrees_celsius(maxObjTemp);
+                }
                 float Tc() const { return tc; }
-                float Tref() const { return tref; }
+                unitsnet_cpp::Temperature Tref() const
+                {
+                    return unitsnet_cpp::Temperature::from_degrees_celsius(tref);
+                }
                 float Coeffs(int index) const { return coeffs[index]; }
                 float ObjCoeffs(int index) const { return objCoeffs[index]; }
 
@@ -55,15 +71,24 @@ namespace LowLevelEmbedded
                 static void Wait(uint32_t milliseconds);
 
                 TSD305_Constants::ErrorCode ReadTemperatureCoefficient(float& tc);
-                TSD305_Constants::ErrorCode ReadReferenceTemperature(float& tref);
-                TSD305_Constants::ErrorCode ReadSensorTempRange(int16_t& tmin, int16_t& tmax);
-                TSD305_Constants::ErrorCode ReadObjectTempRange(int16_t& tmin, int16_t& tmax);
+                TSD305_Constants::ErrorCode ReadReferenceTemperature(
+                    unitsnet_cpp::Temperature& referenceTemperature);
+                TSD305_Constants::ErrorCode ReadSensorTempRange(
+                    unitsnet_cpp::Temperature& minimum,
+                    unitsnet_cpp::Temperature& maximum);
+                TSD305_Constants::ErrorCode ReadObjectTempRange(
+                    unitsnet_cpp::Temperature& minimum,
+                    unitsnet_cpp::Temperature& maximum);
                 TSD305_Constants::ErrorCode ReadCompensationCoefficients(float coeffs[5]);
                 TSD305_Constants::ErrorCode ReadObjectTempCoefficients(float coeffs[5]);
                 TSD305_Constants::ErrorCode ChangeI2CAddress(uint8_t newAddress);
                 TSD305_Constants::ErrorCode GetMeasurement(uint32_t& objectADC, uint32_t& sensorADC);
                 TSD305_Constants::ErrorCode RequestMeasurement(TSD305_Constants::MeasurementType type = TSD305_Constants::MeasurementType::SAMPLES_1);
-                void ConvertMeasurement(uint32_t objectADC, uint32_t sensorADC, float& tSen, float& tObj);
+                void ConvertMeasurement(
+                    uint32_t objectADC,
+                    uint32_t sensorADC,
+                    unitsnet_cpp::Temperature& sensorTemperature,
+                    unitsnet_cpp::Temperature& objectTemperature);
             };
         }
     }

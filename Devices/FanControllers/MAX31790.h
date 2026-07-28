@@ -6,6 +6,8 @@
 #define _MAX31790_H_
 
 #include "../../Base/LLE_I2C.h"
+#include <Ratio.hpp>
+#include <RotationalSpeed.hpp>
 #include <stdint.h>
 
 namespace LowLevelEmbedded
@@ -200,13 +202,15 @@ namespace LowLevelEmbedded
 				/// \param fanID the zero based fan ID (0..5)
 				/// \param targetCount speed of the fan in rpm
 				/// \return true if no errors occurred.
-				bool setFanTargetRPM(uint8_t fanID, uint16_t rpm);
+				bool setFanTargetSpeed(
+				    uint8_t fanID,
+				    unitsnet_cpp::RotationalSpeed speed);
 
 				/// When in PWM mode this method sets the PWM output of a fan
 				/// \param fanID the zero based fan ID (0..5)
 				/// \param pwm a number between 0 and 1, 0 = 0% 1 = 100%
 				/// \return true if no errors occurred.
-				bool setFanTargetPWM(uint8_t fanID, float pwm);
+				bool setFanTargetPWM(uint8_t fanID, unitsnet_cpp::Ratio pwm);
 
 				/// sets the number of tacho pulses per revolution of a fan
 				/// \param fanID the zero based fan ID (0..5)
@@ -223,7 +227,7 @@ namespace LowLevelEmbedded
 				/// Get the actual speed of the fan.
 				/// \param fanID the zero based fan ID (0..5)
 				/// \return The fan speed in rpm.
-				uint16_t getFanRPM(uint8_t fanID);
+				unitsnet_cpp::RotationalSpeed getFanSpeed(uint8_t fanID);
 			};
 		}
 	}

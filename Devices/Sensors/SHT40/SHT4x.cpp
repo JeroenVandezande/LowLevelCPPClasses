@@ -105,7 +105,10 @@ namespace LowLevelEmbedded
             ///     // Handle read/CRC/I2C failure
             /// }
             ///
-            bool SHT4x::ReadTemperatureAndHumidity(float& temperatureC, float& humidity, SHT4x_Precision precision)
+            bool SHT4x::ReadTemperatureAndHumidity(
+                unitsnet_cpp::Temperature& temperature,
+                unitsnet_cpp::RelativeHumidity& humidity,
+                SHT4x_Precision precision)
             {
                 uint8_t data[6];
                 uint8_t command = 0xFD;
@@ -133,8 +136,16 @@ namespace LowLevelEmbedded
                 if (CheckCRC(temperatureRAW, data[2]) && CheckCRC(humidityRAW, data[5]))
                 {
                     // Get Relative Humidity
-                    humidity = (-6 + 125 * (humidityRAW / 65535.0f)) / 100.0f;
-                    temperatureC = -45 + 175 * (temperatureRAW / 65535.0f);
+                    float humidityPercent =
+                        -6.0f + 125.0f * (humidityRAW / 65535.0f);
+                    if (humidityPercent < 0.0f) humidityPercent = 0.0f;
+                    if (humidityPercent > 100.0f) humidityPercent = 100.0f;
+                    humidity = unitsnet_cpp::RelativeHumidity::from_percent(
+                        humidityPercent);
+                    temperature =
+                        unitsnet_cpp::Temperature::from_degrees_celsius(
+                            -45.0f + 175.0f *
+                                (temperatureRAW / 65535.0f));
                     return true;
                 }
 
@@ -160,9 +171,12 @@ namespace LowLevelEmbedded
                  * @return Measured temperature in degrees Celsius on success; default (0.0f)
                  *         if the underlying read fails.
                  */
-                float SHT4x::GetTemperature()
+                unitsnet_cpp::Temperature SHT4x::GetTemperature()
                 {
-                    float humidity, temperature = 0;
+                    auto humidity =
+                        unitsnet_cpp::RelativeHumidity::from_percent(0.0f);
+                    auto temperature =
+                        unitsnet_cpp::Temperature::from_degrees_celsius(0.0f);
                     ReadTemperatureAndHumidity(temperature, humidity, SHT4x_Precision::HIGH);
                     return temperature;
                 }
@@ -192,24 +206,22 @@ namespace LowLevelEmbedded
                  * @return Relative humidity as a fraction (0.0 .. 1.0). Values outside the
                  *         physical range are clamped to that range.
                  */
-                float SHT4x::GetHumidity()
+                unitsnet_cpp::RelativeHumidity SHT4x::GetHumidity()
                 {
-                    float humidity, temperature = 0;
+                    auto humidity =
+                        unitsnet_cpp::RelativeHumidity::from_percent(0.0f);
+                    auto temperature =
+                        unitsnet_cpp::Temperature::from_degrees_celsius(0.0f);
                     ReadTemperatureAndHumidity(temperature, humidity, SHT4x_Precision::HIGH);
-                    if (humidity < 0.0f)
-                    {
-                        humidity = 0.0f;
-                    }
-                    if (humidity > 1.0f)
-                    {
-                        humidity = 1.0f;
-                    }
                     return humidity;
                 }
 
             /// CAUTION: Use this feature sparingly (<10% of Operation Time)
             /// Returns temperature and humidity right before heater deactivation
-            bool SHT4x::ActivateHeater(float& temperatureC, float& humidity, SHT4x_HeaterPreset preset)
+            bool SHT4x::ActivateHeater(
+                unitsnet_cpp::Temperature& temperature,
+                unitsnet_cpp::RelativeHumidity& humidity,
+                SHT4x_HeaterPreset preset)
             {
                 uint8_t data[6];
                 uint8_t command = 0xFD;
@@ -217,16 +229,22 @@ namespace LowLevelEmbedded
                 {
                     case SHT4x_HeaterPreset::H20mW_100ms:
                         command = 0x15;
+                        break;
                     case SHT4x_HeaterPreset::H20mW_1000ms:
                         command = 0x1E;
+                        break;
                     case SHT4x_HeaterPreset::H110mW_100ms:
                         command = 0x24;
+                        break;
                     case SHT4x_HeaterPreset::H110mW_1000ms:
                         command = 0x2F;
+                        break;
                     case SHT4x_HeaterPreset::H200mW_100ms:
                         command = 0x32;
+                        break;
                     case SHT4x_HeaterPreset::H200mW_1000ms:
                         command = 0x39;
+                        break;
                 }
 
                 bool writeSuccess = _i2cAccess->I2C_WriteMethod(_address, &command, 1);
@@ -240,8 +258,16 @@ namespace LowLevelEmbedded
                 if (CheckCRC(temperatureRAW, data[2]) && CheckCRC(humidityRAW, data[5]))
                 {
                     // Get Relative Humidity
-                    humidity = -6 + 125 * (humidityRAW / 65535.0f);
-                    temperatureC = -45 + 175 * (temperatureRAW / 65535.0f);
+                    float humidityPercent =
+                        -6.0f + 125.0f * (humidityRAW / 65535.0f);
+                    if (humidityPercent < 0.0f) humidityPercent = 0.0f;
+                    if (humidityPercent > 100.0f) humidityPercent = 100.0f;
+                    humidity = unitsnet_cpp::RelativeHumidity::from_percent(
+                        humidityPercent);
+                    temperature =
+                        unitsnet_cpp::Temperature::from_degrees_celsius(
+                            -45.0f + 175.0f *
+                                (temperatureRAW / 65535.0f));
                     return true;
                 }
 

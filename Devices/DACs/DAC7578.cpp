@@ -9,12 +9,14 @@ namespace LowLevelEmbedded::Devices::DACs
 {
     const uint8_t CA_WRITEANDUPDATE = 0b00110000;
 
-    DAC7578::DAC7578(II2CAccess* i2cAccess, uint8_t slaveAddres, float referenceVoltage)
+    DAC7578::DAC7578(
+        II2CAccess* i2cAccess,
+        uint8_t slaveAddres,
+        unitsnet_cpp::ElectricPotential referenceVoltage)
+        : _I2CAccess(i2cAccess),
+          _SlaveAddress(slaveAddres),
+          _ReferenceVoltage(referenceVoltage)
     {
-        _I2CAccess = i2cAccess;
-        _SlaveAddress = slaveAddres;
-        _ReferenceVoltage = referenceVoltage;
-        _VoltagePerBit = _ReferenceVoltage / 4095;
     }
 
     bool DAC7578::InitDAC()
@@ -41,9 +43,16 @@ namespace LowLevelEmbedded::Devices::DACs
         return 8;
     }
 
-    bool DAC7578::WriteDACVoltage(uint8_t channel, float value)
+    bool DAC7578::WriteDACVoltage(
+        uint8_t channel,
+        unitsnet_cpp::ElectricPotential value)
     {
-        return WriteDAC(channel, (uint16_t)(value * _VoltagePerBit));
+        const auto ratio = value.volts() / _ReferenceVoltage.volts();
+        if (ratio < 0.0f || ratio > 1.0f)
+        {
+            return false;
+        }
+        return WriteDAC(channel, static_cast<uint16_t>(ratio * GetMaxDAValue()));
     }
 
     IDACChannel<uint16_t>* DAC7578::CreateChannelObject(uint8_t channel)

@@ -52,8 +52,9 @@ namespace LowLevelEmbedded::Devices::Power
     bool MPQ4262::SetOperation(bool on) { return writeByte(0x01, on ? 0x01 : 0x00); }
     bool MPQ4262::ClearFaults() { return sendCommand(0x03); }
 
-    bool MPQ4262::SetVout_V(float volts)
+    bool MPQ4262::SetOutputVoltage(unitsnet_cpp::ElectricPotential voltage)
     {
+        auto volts = voltage.volts();
         if (volts < 1.0f) volts = 1.0f;
         if (volts > 21.47f) volts = 21.47f; // device max range guard
         const uint16_t l16 = volts_to_L16(volts);
@@ -117,8 +118,9 @@ namespace LowLevelEmbedded::Devices::Power
         return WriteReg(0xD0, v);
     }
 
-    bool MPQ4262::SetCurrentLimit_A(float amps)
+    bool MPQ4262::SetCurrentLimit(unitsnet_cpp::ElectricCurrent current)
     {
+        auto amps = current.amperes();
         if (amps < 0.0f) amps = 0.0f;
         if (amps > 5.4f) amps = 5.4f; // clamp to device limit
         uint8_t raw = (uint8_t)(amps / 0.05f + 0.5f); // 50 mA steps

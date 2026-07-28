@@ -1,6 +1,8 @@
 #pragma once
 
 #include "LLE_I2C.h"
+#include <ElectricCurrent.hpp>
+#include <ElectricPotential.hpp>
 #include <stdint.h>
 
 namespace LowLevelEmbedded::Devices::Power
@@ -50,7 +52,7 @@ namespace LowLevelEmbedded::Devices::Power
         // Core PMBus controls
         bool SetOperation(bool on); // OPERATION (0x01)
         bool ClearFaults(); // CLEAR_FAULTS (0x03)
-        bool SetVout_V(float volts); // VOUT_COMMAND (0x21) Linear16
+        bool SetOutputVoltage(unitsnet_cpp::ElectricPotential voltage); // VOUT_COMMAND (0x21) Linear16
         bool ReadStatusWord(uint16_t* out); // STATUS_WORD (0x79)
         bool ReadStatusTemperature(uint8_t* out); // STATUS_TEMPERATURE (0x7D)
 
@@ -75,7 +77,7 @@ namespace LowLevelEmbedded::Devices::Power
 
         bool SetSWA_Ron(SWARon r); // D0[4:3]
 
-        bool SetCurrentLimit_A(float amps); // D1, 50mA step (clamp ~5.4A)
+        bool SetCurrentLimit(unitsnet_cpp::ElectricCurrent current); // D1, 50mA step (clamp ~5.4A)
         enum class LineDrop : uint8_t
         {
             OFF = 0,
@@ -129,4 +131,3 @@ namespace LowLevelEmbedded::Devices::Power
         bool WriteReg(uint8_t reg, uint8_t val);
     };
 }
-

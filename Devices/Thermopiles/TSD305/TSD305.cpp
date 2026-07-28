@@ -171,11 +171,14 @@ namespace LowLevelEmbedded
              * @return An error code of type TSD305_Constants::ErrorCode indicating the
              *         success or failure of the operation.
              */
-            TSD305_Constants::ErrorCode TSD305::ReadReferenceTemperature(float& tref)
+            TSD305_Constants::ErrorCode TSD305::ReadReferenceTemperature(
+                unitsnet_cpp::Temperature& referenceTemperature)
             {
                 uint32_t data;
                 TSD305_Constants::ErrorCode result = ReadLongWord(TSD305_Constants::ADDR_REF_TEMP, data);
-                tref = static_cast<float>(data);
+                referenceTemperature =
+                    unitsnet_cpp::Temperature::from_degrees_celsius(
+                        static_cast<float>(data));
                 return result;
             }
 
@@ -186,15 +189,19 @@ namespace LowLevelEmbedded
              * @param tmax Reference to an integer for storing the maximum temperature value of the sensor.
              * @return A TSD305_Constants::ErrorCode indicating the success or failure of the operation.
              */
-            TSD305_Constants::ErrorCode TSD305::ReadSensorTempRange(int16_t& tmin, int16_t& tmax)
+            TSD305_Constants::ErrorCode TSD305::ReadSensorTempRange(
+                unitsnet_cpp::Temperature& minimum,
+                unitsnet_cpp::Temperature& maximum)
             {
                 uint16_t data = 0;
                 TSD305_Constants::ErrorCode result = ReadWord(TSD305_Constants::ADDR_SENSOR_TEMP_MIN, data);
-                tmin = data;
+                minimum = unitsnet_cpp::Temperature::from_degrees_celsius(
+                    static_cast<int16_t>(data));
                 if (result != TSD305_Constants::ErrorCode::OK) return result;
 
                 result = ReadWord(TSD305_Constants::ADDR_SENSOR_TEMP_MAX, data);
-                tmax = data;
+                maximum = unitsnet_cpp::Temperature::from_degrees_celsius(
+                    static_cast<int16_t>(data));
 
                 return result;
             }
@@ -206,14 +213,18 @@ namespace LowLevelEmbedded
              * @param[out] tmax Reference to a variable where the maximum object temperature will be stored.
              * @return An error code of type TSD305_Constants::ErrorCode indicating the success or failure of the operation.
              */
-            TSD305_Constants::ErrorCode TSD305::ReadObjectTempRange(int16_t& tmin, int16_t& tmax)
+            TSD305_Constants::ErrorCode TSD305::ReadObjectTempRange(
+                unitsnet_cpp::Temperature& minimum,
+                unitsnet_cpp::Temperature& maximum)
             {
                 uint16_t data = 0;
                 TSD305_Constants::ErrorCode result = ReadWord(TSD305_Constants::ADDR_OBJECT_TEMP_MIN, data);
-                tmin = data;
+                minimum = unitsnet_cpp::Temperature::from_degrees_celsius(
+                    static_cast<int16_t>(data));
                 if (result != TSD305_Constants::ErrorCode::OK) return result;
                 result = ReadWord(TSD305_Constants::ADDR_OBJECT_TEMP_MAX, data);
-                tmax = data;
+                maximum = unitsnet_cpp::Temperature::from_degrees_celsius(
+                    static_cast<int16_t>(data));
                 return result;
             }
 
@@ -299,11 +310,34 @@ namespace LowLevelEmbedded
                     return TSD305_Constants::ErrorCode::I2C_WRITE_ERROR;
                 if (!calibrationValuesSet)
                 {
+                    auto minimumSensorTemperature =
+                        unitsnet_cpp::Temperature::from_degrees_celsius(0.0f);
+                    auto maximumSensorTemperature =
+                        unitsnet_cpp::Temperature::from_degrees_celsius(0.0f);
+                    auto minimumObjectTemperature =
+                        unitsnet_cpp::Temperature::from_degrees_celsius(0.0f);
+                    auto maximumObjectTemperature =
+                        unitsnet_cpp::Temperature::from_degrees_celsius(0.0f);
+                    auto referenceTemperature =
+                        unitsnet_cpp::Temperature::from_degrees_celsius(0.0f);
                     ReadObjectTempCoefficients(objCoeffs);
                     ReadCompensationCoefficients(coeffs);
-                    ReadSensorTempRange(minSenTemp, maxSenTemp);
-                    ReadObjectTempRange(minObjTemp, maxObjTemp);
-                    ReadReferenceTemperature(tref);
+                    ReadSensorTempRange(
+                        minimumSensorTemperature,
+                        maximumSensorTemperature);
+                    ReadObjectTempRange(
+                        minimumObjectTemperature,
+                        maximumObjectTemperature);
+                    ReadReferenceTemperature(referenceTemperature);
+                    minSenTemp = static_cast<int16_t>(
+                        minimumSensorTemperature.degrees_celsius());
+                    maxSenTemp = static_cast<int16_t>(
+                        maximumSensorTemperature.degrees_celsius());
+                    minObjTemp = static_cast<int16_t>(
+                        minimumObjectTemperature.degrees_celsius());
+                    maxObjTemp = static_cast<int16_t>(
+                        maximumObjectTemperature.degrees_celsius());
+                    tref = referenceTemperature.degrees_celsius();
                     ReadTemperatureCoefficient(tc);
                     calibrationValuesSet = true;
                 }
@@ -327,10 +361,12 @@ namespace LowLevelEmbedded
             }
 
             void TSD305::ConvertMeasurement(uint32_t objectADC, uint32_t sensorADC,
-                float& tSen, float& tObj)
+                unitsnet_cpp::Temperature& sensorTemperature,
+                unitsnet_cpp::Temperature& objectTemperature)
             {
                 // Calculate Sensor
-                tSen = (float)sensorADC / 16777216.0 * (maxSenTemp - minSenTemp) + minSenTemp;
+                const float tSen = (float)sensorADC / 16777216.0 *
+                    (maxSenTemp - minSenTemp) + minSenTemp;
 
                 // Calculate TC Correction Factor
                 float fTCF = 1.0 + ((tSen - tref) * tc);
@@ -349,11 +385,15 @@ namespace LowLevelEmbedded
                 // Calculate Object Temperature
                 float fADCcomp = (float)objectADC + fOffset;
                 fADCcomp = fADCcomp / fTCF;
-                tObj = objCoeffs[0] * fADCcomp * fADCcomp * fADCcomp * fADCcomp;
+                float tObj = objCoeffs[0] * fADCcomp * fADCcomp * fADCcomp * fADCcomp;
                 tObj = tObj + objCoeffs[1] * fADCcomp * fADCcomp * fADCcomp;
                 tObj = tObj + objCoeffs[2] * fADCcomp * fADCcomp;
                 tObj = tObj + objCoeffs[3] * fADCcomp;
                 tObj = tObj + objCoeffs[4];
+                sensorTemperature =
+                    unitsnet_cpp::Temperature::from_degrees_celsius(tSen);
+                objectTemperature =
+                    unitsnet_cpp::Temperature::from_degrees_celsius(tObj);
             }
 
         }

@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <concepts>
+#include <Ratio.hpp>
 
 namespace LowLevelEmbedded
 {
@@ -9,7 +10,7 @@ namespace LowLevelEmbedded
     {
     public:
         virtual ~ISimplePWMChannel() = default;
-        virtual bool SetPWMPercentage(float value) = 0; // 0.0 .. 1.0
+        virtual bool SetPWMPercentage(unitsnet_cpp::Ratio value) = 0;
     };
 
     // Full channel interface (templated on the raw counter type, e.g., uint16_t)
@@ -35,7 +36,9 @@ namespace LowLevelEmbedded
 
         // Per-channel writes
         virtual bool WritePWM(uint8_t channel, ValueT value) = 0;
-        virtual bool SetPWMPercentage(uint8_t channel, float value) = 0; // 0.0 .. 1.0
+        virtual bool SetPWMPercentage(
+            uint8_t channel,
+            unitsnet_cpp::Ratio value) = 0;
 
         // Capabilities
         virtual ValueT GetMaxPWMValue() = 0;
@@ -58,7 +61,7 @@ namespace LowLevelEmbedded
         PWMChannel_base(IPWMController<ValueT>* parent, uint8_t channel)
             : parent_(parent), channel_(channel) {}
 
-        bool SetPWMPercentage(float value) override
+        bool SetPWMPercentage(unitsnet_cpp::Ratio value) override
         {
             return parent_->SetPWMPercentage(channel_, value);
         }

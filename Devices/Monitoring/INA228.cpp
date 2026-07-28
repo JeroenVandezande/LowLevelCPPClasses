@@ -108,16 +108,18 @@ namespace LowLevelEmbedded::Devices::Monitoring
         }
     }
 
-    bool INA228::calibrate(float maxCurrentExpected)
+    bool INA228::calibrate(unitsnet_cpp::ElectricCurrent maxCurrentExpected)
     {
         // Calculate appropriate calibration value based on the sense resistor
         // and maximum expected current
 
         // Choose currentLSB = maxCurrentExpected / 2^19
-        _currentLSB = maxCurrentExpected / 524288.0f;
+        _currentLSB = unitsnet_cpp::ElectricCurrent::from_amperes(
+            maxCurrentExpected.amperes() / 524288.0f);
 
         // Calculate SHUNT_CAL value
-        float shuntCal = 13107200000.0f * _currentLSB * _senseResistance;
+        float shuntCal = 13107200000.0f * _currentLSB.amperes() *
+            _senseResistance.ohms();
         shuntCal = shuntCal * (_config.AdcRange ? 4.0f : 1.0f);
         uint16_t calValue = static_cast<uint16_t>(shuntCal);
         if (calValue > 0x7FFF) // Max 32767 Shunt CAL Value
@@ -154,7 +156,11 @@ namespace LowLevelEmbedded::Devices::Monitoring
 
         // Set Config register
         configValue |= (_config.AdcRange ? 0x0010 : 0x0000);
-        configValue |= static_cast<uint16_t>(_config.ConversionDelay) << 6;
+        const auto conversionDelaySteps = static_cast<uint16_t>(
+            std::round(_config.ConversionDelay.milliseconds() / 2.0f));
+        if (conversionDelaySteps > 0xFF)
+            return false;
+        configValue |= conversionDelaySteps << 6;
         configValue |= (_config.UseTemperatureCompensation ? 0x0020 : 0x0000);
 
         // Write new configuration
@@ -184,7 +190,7 @@ namespace LowLevelEmbedded::Devices::Monitoring
         uint16_t diagConfig = 0;
         diagConfig ^= (-static_cast<uint16_t>(_config.LatchAlert) ^ diagConfig) & (1u << 15);
         diagConfig ^= (-static_cast<uint16_t>(_config.ConversionReadyAssert) ^ diagConfig) & (1u << 14);
-        diagConfig ^= (-static_cast<uint16_t>(_config.ConversionDelay) ^ diagConfig) & (1u << 13);
+        diagConfig ^= (-static_cast<uint16_t>(_config.SlowAlert) ^ diagConfig) & (1u << 13);
         diagConfig ^= (-static_cast<uint16_t>(_config.AlertPolarity) ^ diagConfig) & (1u << 12);
         if (!write16bitWord(CONFIG, diagConfig))
         {
@@ -203,11 +209,11 @@ namespace LowLevelEmbedded::Devices::Monitoring
         return write16bitWord(SHUNT_TEMPCO, coefficient);
     }
 
-    float INA228::ReadShuntVoltage()
+    unitsnet_cpp::ElectricPotential INA228::ReadShuntVoltage()
     {
         uint32_t reg24 = 0;
         if (!read24bitWord(VSHUNT, reg24))
-            return 0.0f;
+            return unitsnet_cpp::ElectricPotential::from_volts(0.0f);
 
         // Sign-extend from 24-bit two's complement
         if (reg24 & 0x800000)          // bit 23 = sign
@@ -219,14 +225,15 @@ namespace LowLevelEmbedded::Devices::Monitoring
         // Shunt Voltage LSB = 312.5 nV or 78.125 nV per datasheet
         const float vshuntLSB = _config.AdcRange ? 78.125e-9f : 312.5e-9f;
 
-        return static_cast<float>(vshuntRaw) * vshuntLSB;
+        return unitsnet_cpp::ElectricPotential::from_volts(
+            static_cast<float>(vshuntRaw) * vshuntLSB);
     }
 
-    float INA228::ReadBusVoltage()
+    unitsnet_cpp::ElectricPotential INA228::ReadBusVoltage()
     {
         uint32_t reg24 = 0;
         if (!read24bitWord(VBUS, reg24))
-            return 0.0f;
+            return unitsnet_cpp::ElectricPotential::from_volts(0.0f);
 
         // Sign-extend from 24-bit two's complement
         if (reg24 & 0x800000)          // bit 23 = sign
@@ -237,25 +244,25 @@ namespace LowLevelEmbedded::Devices::Monitoring
 
         // Bus Voltage LSB = 195.3125 μV/bit per datasheet
         constexpr float vbusLSB = 195.3125e-6f;
-        return vbusRaw * vbusLSB;
+        return unitsnet_cpp::ElectricPotential::from_volts(vbusRaw * vbusLSB);
     }
 
-    float INA228::ReadTemperature()
+    unitsnet_cpp::Temperature INA228::ReadTemperature()
     {
         int16_t tempRaw = 0;
         if (!read16bitWord(DIETEMP, reinterpret_cast<uint16_t&>(tempRaw)))
-            return 0.0f;
+            return unitsnet_cpp::Temperature::from_degrees_celsius(0.0f);
 
         // Temperature LSB = 7.8125 m°C/bit per datasheet
         constexpr float tempLSB = 7.8125e-3f;
-        return tempRaw * tempLSB;
+        return unitsnet_cpp::Temperature::from_degrees_celsius(tempRaw * tempLSB);
     }
 
-    float INA228::ReadCurrent()
+    unitsnet_cpp::ElectricCurrent INA228::ReadCurrent()
     {
         uint32_t reg24 = 0;
         if (!read24bitWord(CURRENT, reg24))
-            return 0.0f;
+            return unitsnet_cpp::ElectricCurrent::from_amperes(0.0f);
 
         // Sign-extend from 24-bit two's complement
         if (reg24 & 0x800000)          // bit 23 = sign
@@ -264,32 +271,35 @@ namespace LowLevelEmbedded::Devices::Monitoring
         // 4 reserved LSBs (bits 3..0)
         int32_t currentRaw = static_cast<int32_t>(reg24) >> 4;  // arithmetic shift
 
-        return static_cast<float>(currentRaw) * _currentLSB;
+        return unitsnet_cpp::ElectricCurrent::from_amperes(
+            static_cast<float>(currentRaw) * _currentLSB.amperes());
     }
 
-    float INA228::ReadPower()
+    unitsnet_cpp::Power INA228::ReadPower()
     {
         uint32_t powerRaw = 0;
         if (!read24bitWord(POWER, powerRaw))
-            return 0.0f;
+            return unitsnet_cpp::Power::from_watts(0.0f);
 
-        return powerRaw * _currentLSB * 3.2;
+        return unitsnet_cpp::Power::from_watts(
+            powerRaw * _currentLSB.amperes() * 3.2f);
     }
 
-    float INA228::ReadEnergy()
+    unitsnet_cpp::Energy INA228::ReadEnergy()
     {
         uint64_t energyRaw = 0;
         if (!read40bitWord(ENERGY, energyRaw))
-            return 0.0f;
+            return unitsnet_cpp::Energy::from_joules(0.0f);
 
-        return energyRaw * _currentLSB * 3.2 * 16;
+        return unitsnet_cpp::Energy::from_joules(
+            energyRaw * _currentLSB.amperes() * 3.2f * 16.0f);
     }
 
-    float INA228::ReadCharge()
+    unitsnet_cpp::ElectricCharge INA228::ReadCharge()
     {
         int64_t chargeRaw = 0;
         if (!read40bitWord(CHARGE, reinterpret_cast<uint64_t&>(chargeRaw)))
-            return 0.0f;
+            return unitsnet_cpp::ElectricCharge::from_coulombs(0.0f);
 
         // Handle sign extension for 40-bit two's complement
         if (chargeRaw & 0x8000000000)
@@ -297,16 +307,17 @@ namespace LowLevelEmbedded::Devices::Monitoring
             chargeRaw |= 0xFFFFFF0000000000;
         }
 
-        return chargeRaw * _currentLSB;
+        return unitsnet_cpp::ElectricCharge::from_coulombs(
+            chargeRaw * _currentLSB.amperes());
     }
 
-    bool INA228::SetShuntVoltageOverLimit(const float limitInVolts)
+    bool INA228::SetShuntVoltageOverLimit(unitsnet_cpp::ElectricPotential limit)
     {
         // LSB from datasheet
         const float vshuntLSB = _config.AdcRange ? 1.25e-6f : 5e-6f;
 
         // Convert to raw integer
-        float rawF = limitInVolts / vshuntLSB;
+        float rawF = limit.volts() / vshuntLSB;
 
         // Round to nearest integer
         int32_t raw = static_cast<int32_t>(std::round(rawF));
@@ -324,13 +335,13 @@ namespace LowLevelEmbedded::Devices::Monitoring
         return write16bitWord(SOVL, regValue);
     }
 
-    bool INA228::SetShuntVoltageUnderLimit(const float limitInVolts)
+    bool INA228::SetShuntVoltageUnderLimit(unitsnet_cpp::ElectricPotential limit)
     {
         // LSB from datasheet
         const float vshuntLSB = _config.AdcRange ? 1.25e-6f : 5e-6f;
 
         // Convert to raw integer
-        float rawF = limitInVolts / vshuntLSB;
+        float rawF = limit.volts() / vshuntLSB;
 
         // Round to nearest integer
         int32_t raw = static_cast<int32_t>(std::round(rawF));
@@ -348,8 +359,9 @@ namespace LowLevelEmbedded::Devices::Monitoring
         return write16bitWord(SUVL, regValue);
     }
 
-    bool INA228::SetBusVoltageOverLimit(const float limitInVolts)
+    bool INA228::SetBusVoltageOverLimit(unitsnet_cpp::ElectricPotential limit)
     {
+        const auto limitInVolts = limit.volts();
         if (limitInVolts < 0.0f) return false; // Negative values are not allowed (see datasheet)
 
         // LSB from datasheet: 3.125 mV
@@ -371,8 +383,9 @@ namespace LowLevelEmbedded::Devices::Monitoring
         return write16bitWord(BOVL, regValue);
     }
 
-    bool INA228::SetBusVoltageUnderLimit(const float limitInVolts)
+    bool INA228::SetBusVoltageUnderLimit(unitsnet_cpp::ElectricPotential limit)
     {
+        const auto limitInVolts = limit.volts();
         if (limitInVolts < 0.0f) return false; // Negative values are not allowed (see datasheet)
 
         // LSB from datasheet: 3.125 mV
@@ -394,8 +407,9 @@ namespace LowLevelEmbedded::Devices::Monitoring
         return write16bitWord(BUVL, regValue);
     }
 
-    bool INA228::SetTemperatureOverLimit(const float limitInCelsius)
+    bool INA228::SetTemperatureOverLimit(unitsnet_cpp::Temperature limit)
     {
+        const auto limitInCelsius = limit.degrees_celsius();
         // LSB from datasheet
         const float tempLSB = 7.8125e-3f;
 
@@ -418,15 +432,16 @@ namespace LowLevelEmbedded::Devices::Monitoring
         return write16bitWord(TEMP_LIMIT, regValue);
     }
 
-    bool INA228::SetPowerOverLimit(const float limitInWatts)
+    bool INA228::SetPowerOverLimit(unitsnet_cpp::Power limit)
     {
+        const auto limitInWatts = limit.watts();
         if (limitInWatts < 0.0f)
         {
             return false; // Negative values are not allowed (see datasheet)
         }
 
         // LSB from datasheet
-        float powerLSB = _currentLSB * 3.2f * 256;
+        float powerLSB = _currentLSB.amperes() * 3.2f * 256;
 
         // Convert to raw value
         float rawF = limitInWatts / powerLSB;

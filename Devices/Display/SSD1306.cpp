@@ -377,15 +377,24 @@ namespace LowLevelEmbedded::Devices::Display
     }
 
     template <bool Rotate90>
-    void SSD1306<Rotate90>::DrawArc(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep, SSD1306_COLOR color)
+    void SSD1306<Rotate90>::DrawArc(
+        uint8_t x,
+        uint8_t y,
+        uint8_t radius,
+        unitsnet_cpp::Angle start_angle,
+        unitsnet_cpp::Angle sweep,
+        SSD1306_COLOR color)
     {
-        float sx = (float)cos(DegToRad(start_angle));
-        float sy = (float)sin(DegToRad(start_angle));
-        uint16_t deg = NormalizeTo0_360(start_angle);
+        const auto startDegrees = static_cast<uint16_t>(
+            std::lround(start_angle.degrees()));
+        const auto sweepDegrees = static_cast<uint16_t>(
+            std::lround(sweep.degrees()));
+        uint16_t deg = NormalizeTo0_360(startDegrees);
 
-        for (; NormalizeTo0_360(deg) <= NormalizeTo0_360(start_angle + sweep); deg++)
+        for (; NormalizeTo0_360(deg) <=
+            NormalizeTo0_360(startDegrees + sweepDegrees); deg++)
         {
-            float rad = DegToRad(deg);
+            float rad = unitsnet_cpp::Angle::from_degrees(deg).radians();
             float cx = (float)cos(rad) * radius;
             float cy = (float)sin(rad) * radius;
 
@@ -394,14 +403,22 @@ namespace LowLevelEmbedded::Devices::Display
     }
 
     template <bool Rotate90>
-    void SSD1306<Rotate90>::DrawArcWithRadiusLine(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep, SSD1306_COLOR color)
+    void SSD1306<Rotate90>::DrawArcWithRadiusLine(
+        uint8_t x,
+        uint8_t y,
+        uint8_t radius,
+        unitsnet_cpp::Angle start_angle,
+        unitsnet_cpp::Angle sweep,
+        SSD1306_COLOR color)
     {
         DrawArc(x, y, radius, start_angle, sweep, color);
-        float sx = (float)cos(DegToRad(start_angle));
-        float sy = (float)sin(DegToRad(start_angle));
-        uint16_t deg = NormalizeTo0_360(start_angle + sweep);
-        float ex = (float)cos(DegToRad(deg));
-        float ey = (float)sin(DegToRad(deg));
+        float sx = (float)cos(start_angle.radians());
+        float sy = (float)sin(start_angle.radians());
+        const auto endAngle = unitsnet_cpp::Angle::from_degrees(
+            NormalizeTo0_360(static_cast<uint16_t>(
+                std::lround(start_angle.degrees() + sweep.degrees()))));
+        float ex = (float)cos(endAngle.radians());
+        float ey = (float)sin(endAngle.radians());
 
         Line(x, y, x + sx * radius, y + sy * radius, color);
         Line(x, y, x + ex * radius, y + ey * radius, color);
@@ -645,12 +662,6 @@ namespace LowLevelEmbedded::Devices::Display
             // I2C mode data write handled in UpdateScreen method
             i2c_Access->I2C_Mem_Write(address, 0x40, 1, buffer, buff_size);
         }
-    }
-
-    template <bool Rotate90>
-    float SSD1306<Rotate90>::DegToRad(float par_deg)
-    {
-        return par_deg * 3.14159265359f / 180.0f;
     }
 
     template <bool Rotate90>

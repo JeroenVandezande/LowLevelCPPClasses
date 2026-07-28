@@ -83,7 +83,6 @@ namespace LowLevelEmbedded::Devices::Display
         // Low-level procedures
         void WriteCommand(uint8_t byte);
         void WriteData(uint8_t* buffer, size_t buff_size);
-        float DegToRad(float par_deg);
         uint16_t NormalizeTo0_360(uint16_t par_deg);
 
     public:
@@ -100,10 +99,16 @@ namespace LowLevelEmbedded::Devices::Display
         char WriteString(char* str, Display_Font_t Font, SSD1306_COLOR color) override;
         void SetCursor(uint8_t x, uint8_t y) override;
         void Line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, SSD1306_COLOR color) override;
-        void DrawArc(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep,
+        void DrawArc(
+                   uint8_t x, uint8_t y, uint8_t radius,
+                   unitsnet_cpp::Angle start_angle,
+                   unitsnet_cpp::Angle sweep,
                    SSD1306_COLOR color) override;
-        void DrawArcWithRadiusLine(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle,
-                                 uint16_t sweep, SSD1306_COLOR color) override;
+        void DrawArcWithRadiusLine(
+                   uint8_t x, uint8_t y, uint8_t radius,
+                   unitsnet_cpp::Angle start_angle,
+                   unitsnet_cpp::Angle sweep,
+                   SSD1306_COLOR color) override;
         void DrawCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, SSD1306_COLOR color) override;
         void FillCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, SSD1306_COLOR par_color) override;
         void Polyline(const DISPLAY_VERTEX* par_vertex, uint16_t par_size, SSD1306_COLOR color) override;

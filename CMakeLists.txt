@@ -29,7 +29,7 @@ if (NOT COMMAND CPMAddPackage)
     include("${CMAKE_CURRENT_BINARY_DIR}/CPM_${CPM_VERSION}.cmake")
 endif ()
 
-CPMAddPackage("gh:JeroenVandezande/unitsnet-cpp@1.3.0")
+CPMAddPackage("gh:JeroenVandezande/unitsnet-cpp@2.0.1")
 CPMAddPackage("gh:an-dr/microlog@6.5.0")
 
 target_compile_definitions( microlog
@@ -41,7 +41,6 @@ target_compile_definitions( unitsnet_cpp
         INTERFACE
         UNITSNET_CPP_USE_FLOAT=1)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC unitsnet_cpp microlog)
+target_link_libraries(${PROJECT_NAME} PUBLIC UnitsNet::UnitsNet microlog)
 
 target_include_directories (${PROJECT_NAME} PUBLIC ${LIB_INCLUDE_DIRS})
-

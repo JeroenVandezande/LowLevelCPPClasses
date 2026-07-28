@@ -20,13 +20,21 @@ uint8_t LowLevelEmbedded::PWM_DAC<ValueT>::GetMaxChannels()
 }
 
 template <std::unsigned_integral ValueT>
-bool LowLevelEmbedded::PWM_DAC<ValueT>::WriteDACVoltage(uint8_t channel, float value)
+bool LowLevelEmbedded::PWM_DAC<ValueT>::WriteDACVoltage(
+    uint8_t channel,
+    unitsnet_cpp::ElectricPotential value)
 {
-    return WriteDAC(channel, static_cast<ValueT>(value * voltagePerBit_));
+    const auto ratio = value.volts() / maxVoltage_.volts();
+    if (ratio < 0.0f || ratio > 1.0f)
+    {
+        return false;
+    }
+    return WriteDAC(channel, static_cast<ValueT>(ratio * maxDAValue_));
 }
 
 template <std::unsigned_integral ValueT>
-LowLevelEmbedded::IDACChannel<unsigned short>* LowLevelEmbedded::PWM_DAC<ValueT>::CreateChannelObject(uint8_t channel)
+LowLevelEmbedded::IDACChannel<ValueT>*
+LowLevelEmbedded::PWM_DAC<ValueT>::CreateChannelObject(uint8_t channel)
 {
     return new PWMChannel_base<ValueT>(this, channel);
 }

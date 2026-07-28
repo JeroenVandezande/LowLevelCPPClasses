@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <functional>
+#include <Angle.hpp>
 
 namespace LowLevelEmbedded
 {
@@ -37,10 +38,20 @@ namespace LowLevelEmbedded
         virtual char WriteString(char* str, Display_Font_t Font, color_type color) = 0;
         virtual void SetCursor(uint8_t x, uint8_t y) = 0;
         virtual void Line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, color_type color) = 0;
-        virtual void DrawArc(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep,
-                     color_type color) = 0;
-        virtual void DrawArcWithRadiusLine(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle,
-                                   uint16_t sweep, color_type color) = 0;
+        virtual void DrawArc(
+            uint8_t x,
+            uint8_t y,
+            uint8_t radius,
+            unitsnet_cpp::Angle start_angle,
+            unitsnet_cpp::Angle sweep,
+            color_type color) = 0;
+        virtual void DrawArcWithRadiusLine(
+            uint8_t x,
+            uint8_t y,
+            uint8_t radius,
+            unitsnet_cpp::Angle start_angle,
+            unitsnet_cpp::Angle sweep,
+            color_type color) = 0;
         virtual void DrawCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, color_type color) = 0;
         virtual void FillCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, color_type par_color) = 0;
         virtual void Polyline(const DISPLAY_VERTEX* par_vertex, uint16_t par_size, color_type color) = 0;

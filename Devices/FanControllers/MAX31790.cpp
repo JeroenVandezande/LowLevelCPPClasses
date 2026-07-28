@@ -79,9 +79,20 @@ namespace LowLevelEmbedded
 				return _writeToRegister(FAN1_DYNAMICS_ADDRESS + fanID, _FanConfigurationRegisters[fanID]);
 			}
 
-			bool MAX31790::setFanTargetRPM(uint8_t fanID, uint16_t rpm)
+			bool MAX31790::setFanTargetSpeed(
+				uint8_t fanID,
+				unitsnet_cpp::RotationalSpeed speed)
 			{
 				uint16_t SR = _getFanSpeedRange(fanID);
+				const auto rpm = speed.revolutions_per_minute();
+				if (rpm <= 0.0f)
+				{
+					constexpr uint16_t stoppedTargetCount = 2047;
+					const uint8_t lowerByte = static_cast<uint8_t>(stoppedTargetCount << 5);
+					const uint8_t higherByte = static_cast<uint8_t>(stoppedTargetCount >> 3);
+					if (!_writeToRegister(TACH1_TARGET_COUNT_MSB_ADDRESS + (fanID * 2), higherByte)) return false;
+					return _writeToRegister(TACH1_TARGET_COUNT_LSB_ADDRESS + (fanID * 2), lowerByte);
+				}
 
 				float speedAsFloat = (60.0 / (_NumberOfTachoPulsesPerRevolution[fanID] * rpm)) * SR * 8192;
 				uint16_t speedAsInt = round(speedAsFloat);
@@ -93,9 +104,11 @@ namespace LowLevelEmbedded
 				return true;
 			}
 
-			bool MAX31790::setFanTargetPWM(uint8_t fanID, float pwm)
+			bool MAX31790::setFanTargetPWM(uint8_t fanID, unitsnet_cpp::Ratio pwm)
 			{
-				uint16_t pwmAsInt = round(pwm * 511);
+				const auto dutyCycle = pwm.decimal_fractions();
+				if (dutyCycle < 0.0f || dutyCycle > 1.0f) return false;
+				uint16_t pwmAsInt = round(dutyCycle * 511);
 				uint8_t lowerByte = (uint8_t) (pwmAsInt << 7);
 				uint8_t higherByte = (uint8_t) (pwmAsInt >> 1);
 				if(!_writeToRegister(PWMOUT1_TARGET_DUTYCYCLE_MSB_ADDRESS + (fanID * 2), higherByte)) return false;
@@ -136,14 +149,18 @@ namespace LowLevelEmbedded
 				return SR;
 			}
 
-			uint16_t MAX31790::getFanRPM(uint8_t fanID)
+			unitsnet_cpp::RotationalSpeed MAX31790::getFanSpeed(uint8_t fanID)
 			{
 				uint16_t SR = _getFanSpeedRange(fanID);
 				uint16_t TC_MSB = _readFromRegister(TACH1_COUNT_MSB_ADDRESS + (fanID * 2));
 				uint16_t TC_LSB = _readFromRegister(TACH1_COUNT_LSB_ADDRESS + (fanID * 2));
 				uint16_t TC = (TC_LSB >> 5) | (TC_MSB << 3);
+				if (TC == 0 || TC == 2047)
+				{
+					return unitsnet_cpp::RotationalSpeed::from_revolutions_per_minute(0.0f);
+				}
 				float rpmAsFloat = (60 * SR * 8192) / (TC * _NumberOfTachoPulsesPerRevolution[fanID]);
-				return round(rpmAsFloat);
+				return unitsnet_cpp::RotationalSpeed::from_revolutions_per_minute(rpmAsFloat);
 			}
 
 		}

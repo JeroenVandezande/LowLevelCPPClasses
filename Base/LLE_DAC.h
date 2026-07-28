@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <concepts>
+#include <ElectricPotential.hpp>
 
 namespace LowLevelEmbedded
 {
@@ -36,7 +37,8 @@ namespace LowLevelEmbedded
          * @param value The desired voltage in volts to be written to the DAC.
          * @return Returns true if the operation succeeded, otherwise false.
          */
-        virtual bool WriteDACVoltage(float value) = 0;
+        virtual bool WriteDACVoltage(
+            unitsnet_cpp::ElectricPotential value) = 0;
     };
 
     template <std::unsigned_integral ValueT>
@@ -148,7 +150,9 @@ namespace LowLevelEmbedded
          * @param value The voltage value to be written. The valid range depends on the DAC hardware specifications.
          * @return True if the operation is successful, false otherwise.
          */
-        virtual bool WriteDACVoltage(uint8_t channel, float value) = 0;
+        virtual bool WriteDACVoltage(
+            uint8_t channel,
+            unitsnet_cpp::ElectricPotential value) = 0;
 
         /**
          * Creates and returns an object that represents a specific DAC channel.
@@ -173,7 +177,8 @@ namespace LowLevelEmbedded
             channel_ = channel;
         }
 
-        bool WriteDACVoltage(float value) override
+        bool WriteDACVoltage(
+            unitsnet_cpp::ElectricPotential value) override
         {
             return parent_->WriteDACVoltage(channel_, value);
         }

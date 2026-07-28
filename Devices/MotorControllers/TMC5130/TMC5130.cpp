@@ -27,22 +27,39 @@ namespace LowLevelEmbedded::Devices::MotorControllers
         this->MotorState = msConstantVelocityRampingDown;
     }
 
-    void TMC5130::MoveToPosition(const int32_t position, const int32_t acc, const int32_t speedMax, const int32_t dec)
+    void TMC5130::MoveToPosition(
+        const int32_t position,
+        const int32_t accelerationInPulsesPerSecondSquared,
+        unitsnet_cpp::Frequency maximumStepFrequency,
+        const int32_t decelerationInPulsesPerSecondSquared)
     {
-        log_info("TMC5130: Moving to position %ld with acc=%ld, speed=%ld, dec=%ld", position, acc, speedMax, dec);
+        const auto speedMax = static_cast<int32_t>(
+            maximumStepFrequency.hertz());
+        log_info("TMC5130: Moving to position %ld with acc=%ld, speed=%ld, dec=%ld",
+            position,
+            accelerationInPulsesPerSecondSquared,
+            speedMax,
+            decelerationInPulsesPerSecondSquared);
         // Set Current for Motor
         _activateMoveCurrent();
         _writeInt(TMC5130_RAMPMODE, TMC5130_MODE_POSITION);
         _writeInt(TMC5130_VMAX, SpeedPPSToMotorUnits(speedMax));
-        _writeInt(TMC5130_AMAX, AccDecPPSToMotorUnits(acc));
-        _writeInt(TMC5130_DMAX, AccDecPPSToMotorUnits(dec));
+        _writeInt(TMC5130_AMAX,
+            AccDecPPSToMotorUnits(accelerationInPulsesPerSecondSquared));
+        _writeInt(TMC5130_DMAX,
+            AccDecPPSToMotorUnits(decelerationInPulsesPerSecondSquared));
         _writeInt(TMC5130_XTARGET, position);
         this->LastTargetPosition = position;
         this->MotorState = msTrajectory;
     }
 
-    void TMC5130::StartMoveUntilSwitch(const uint8_t switchId, const bool polarity, const int32_t acc, const int32_t velocity)
+    void TMC5130::StartMoveUntilSwitch(
+        const uint8_t switchId,
+        const bool polarity,
+        const int32_t accelerationInPulsesPerSecondSquared,
+        unitsnet_cpp::Frequency stepFrequency)
     {
+        const auto velocity = static_cast<int32_t>(stepFrequency.hertz());
         if (switchId == 254) // check if callback was assigned
         {
             if (!(this->GetCustomHomeSwitchActuatedCallback))
@@ -57,20 +74,27 @@ namespace LowLevelEmbedded::Devices::MotorControllers
         this->_stopSwitchInverted = !polarity;
         // Set absolute velocity
         _writeInt(TMC5130_VMAX, SpeedPPSToMotorUnits(abs(velocity)));
-        _writeInt(TMC5130_AMAX, AccDecPPSToMotorUnits(acc));
+        _writeInt(TMC5130_AMAX,
+            AccDecPPSToMotorUnits(accelerationInPulsesPerSecondSquared));
         // Set direction
         _writeInt(TMC5130_RAMPMODE, (velocity >= 0) ? TMC5130_MODE_VELPOS : TMC5130_MODE_VELNEG);
         this->MotorState = msConstantVelocityUntilSwitch;
     }
 
-    void TMC5130::StartConstantVelocity(const int32_t acc, const int32_t velocity)
+    void TMC5130::StartConstantVelocity(
+        const int32_t accelerationInPulsesPerSecondSquared,
+        unitsnet_cpp::Frequency stepFrequency)
     {
-        log_info("TMC5130: Starting constant velocity motion with acc=%ld, velocity=%ld", acc, velocity);
+        const auto velocity = static_cast<int32_t>(stepFrequency.hertz());
+        log_info("TMC5130: Starting constant velocity motion with acc=%ld, velocity=%ld",
+            accelerationInPulsesPerSecondSquared,
+            velocity);
         // Set Current for Motor
         _activateRampUpCurrent();
         // Set absolute velocity
         _writeInt(TMC5130_VMAX, SpeedPPSToMotorUnits(abs(velocity)));
-        _writeInt(TMC5130_AMAX, AccDecPPSToMotorUnits(acc));
+        _writeInt(TMC5130_AMAX,
+            AccDecPPSToMotorUnits(accelerationInPulsesPerSecondSquared));
         // Set direction
         _writeInt(TMC5130_RAMPMODE, (velocity >= 0) ? TMC5130_MODE_VELPOS : TMC5130_MODE_VELNEG);
         this->MotorState = msConstantVelocityRampUp;
@@ -91,15 +115,23 @@ namespace LowLevelEmbedded::Devices::MotorControllers
      * @param ticksInms The current time tick value in milliseconds from a hardware
      * timer, used to manage timed operations.
      */
-    void TMC5130::StartTimedConstantVelocity(uint32_t acc, int32_t velocity, uint32_t timeInms, uint32_t ticksInms)
+    void TMC5130::StartTimedConstantVelocity(
+        uint32_t accelerationInPulsesPerSecondSquared,
+        unitsnet_cpp::Frequency stepFrequency,
+        unitsnet_cpp::Duration duration,
+        unitsnet_cpp::Duration currentTime)
     {
-        this->_lastStartTimeInms = ticksInms;
-        this->_targetMoveTimeInms = timeInms;
+        const auto velocity = static_cast<int32_t>(stepFrequency.hertz());
+        this->_lastStartTimeInms =
+            static_cast<int32_t>(currentTime.milliseconds());
+        this->_targetMoveTimeInms =
+            static_cast<int32_t>(duration.milliseconds());
         // Set Current for Motor
         _activateRampUpCurrent();
         // Set absolute velocity
         _writeInt(TMC5130_VMAX, SpeedPPSToMotorUnits(abs(velocity)));
-        _writeInt(TMC5130_AMAX, AccDecPPSToMotorUnits(acc));
+        _writeInt(TMC5130_AMAX,
+            AccDecPPSToMotorUnits(accelerationInPulsesPerSecondSquared));
         // Set direction
         _writeInt(TMC5130_RAMPMODE, (velocity >= 0) ? TMC5130_MODE_VELPOS : TMC5130_MODE_VELNEG);
         this->MotorState = msTimedConstantVelocityRampUp;
@@ -162,8 +194,10 @@ namespace LowLevelEmbedded::Devices::MotorControllers
      * @param elapsedTimeinMs The time elapsed since the last invocation of this
      * method, in milliseconds.
      */
-    void TMC5130::PeriodicJob(const uint32_t elapsedTimeinMs)
+    void TMC5130::PeriodicJob(unitsnet_cpp::Duration elapsedTime)
     {
+        const auto elapsedTimeinMs =
+            static_cast<int32_t>(elapsedTime.milliseconds());
         if (this->_configState != CONFIG_READY)
         {
             _writeConfiguration();
@@ -424,9 +458,9 @@ namespace LowLevelEmbedded::Devices::MotorControllers
         return (2.5 / fullScaleCurrentInmA) * currentInmA;
     }
 
-    bool TMC5130::_activate_current(const uint16_t current_in_mA)
+    bool TMC5130::_activate_current(unitsnet_cpp::ElectricCurrent current)
     {
-        if (this->SenseResistorInOhms == 0)
+        if (this->SenseResistor.ohms() == 0.0f)
         {
             log_error("Sense Resistor is not defined");
             return false;
@@ -442,14 +476,24 @@ namespace LowLevelEmbedded::Devices::MotorControllers
         if (this->CurrentSetVoltageChannel)
         {
             this->CurrentSetVoltageChannel->WriteDACVoltage(
-                CalculateAnalogCurrentVoltage(current_in_mA, SenseResistorInOhms, Vfs));
+                unitsnet_cpp::ElectricPotential::from_volts(
+                    CalculateAnalogCurrentVoltage(
+                        static_cast<uint16_t>(current.milliamperes()),
+                        SenseResistor.ohms(),
+                        Vfs)));
         }
         else
         {
             int32_t value = 4 << 16; // 4 is a good IHOLDDELAY value for most cases, this will do a
             // smooth transition from move to idle current
-            value |= (CalculateDigitalCurrent(current_in_mA, SenseResistorInOhms, Vfs) << 8);
-            value |= CalculateDigitalCurrent(Motor_Idle_CurrentInmA, SenseResistorInOhms, Vfs);
+            value |= (CalculateDigitalCurrent(
+                static_cast<uint16_t>(current.milliamperes()),
+                SenseResistor.ohms(),
+                Vfs) << 8);
+            value |= CalculateDigitalCurrent(
+                static_cast<uint16_t>(MotorIdleCurrent.milliamperes()),
+                SenseResistor.ohms(),
+                Vfs);
             _writeInt(TMC5130_IHOLD_IRUN, value);
         }
         return true;
@@ -457,19 +501,22 @@ namespace LowLevelEmbedded::Devices::MotorControllers
 
     void TMC5130::_activateIdleCurrent()
     {
-        _activate_current(Motor_Idle_CurrentInmA);
-        log_info("Motor Current Set to %d mA", Motor_Idle_CurrentInmA);
+        _activate_current(MotorIdleCurrent);
+        log_info("Motor Current Set to %d mA",
+            static_cast<int>(MotorIdleCurrent.milliamperes()));
     }
 
     void TMC5130::_activateRampUpCurrent()
     {
-        _activate_current(Motor_RampUp_CurrentInmA);
-        log_info("Motor Current Set to %d mA", Motor_RampUp_CurrentInmA);
+        _activate_current(MotorRampUpCurrent);
+        log_info("Motor Current Set to %d mA",
+            static_cast<int>(MotorRampUpCurrent.milliamperes()));
     }
 
     void TMC5130::_activateMoveCurrent()
     {
-        _activate_current(Motor_FullSpeed_CurrentInmA);
-        log_info("Motor Current Set to %d mA", Motor_FullSpeed_CurrentInmA);
+        _activate_current(MotorFullSpeedCurrent);
+        log_info("Motor Current Set to %d mA",
+            static_cast<int>(MotorFullSpeedCurrent.milliamperes()));
     }
 } // namespace LowLevelEmbedded::Devices::MotorControllers

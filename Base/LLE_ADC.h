@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <concepts>
+#include <ElectricPotential.hpp>
 
 namespace LowLevelEmbedded
 {
@@ -12,7 +13,7 @@ namespace LowLevelEmbedded
         {
         };
 
-        virtual float ReadVoltage() = 0;
+        virtual unitsnet_cpp::ElectricPotential ReadVoltage() = 0;
     };
 
     template <std::unsigned_integral ValueT>
@@ -38,7 +39,7 @@ namespace LowLevelEmbedded
         virtual ValueT ReadADC(uint8_t channel) = 0;
         virtual ValueT GetMaxADCValue() = 0;
         virtual uint8_t GetMaxChannels() = 0;
-        virtual float ReadVoltage(uint8_t channel) = 0;
+        virtual unitsnet_cpp::ElectricPotential ReadVoltage(uint8_t channel) = 0;
         virtual IADCChannel<ValueT>* CreateChannelObject(uint8_t channel) = 0;
     };
 
@@ -56,7 +57,7 @@ namespace LowLevelEmbedded
             channel_ = channel;
         }
 
-        float ReadVoltage() override
+        unitsnet_cpp::ElectricPotential ReadVoltage() override
         {
             return parent_->ReadVoltage(channel_);
         }

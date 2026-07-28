@@ -9,23 +9,25 @@ namespace LowLevelEmbedded
     {
     private:
         IPWMController<ValueT>* pwmController_;
-        float maxVoltage_;
+        unitsnet_cpp::ElectricPotential maxVoltage_;
         ValueT maxDAValue_;
-        float voltagePerBit_;
 
     public:
-        PWM_DAC(IPWMController<ValueT>* pwmController, float maxVoltage)
+        PWM_DAC(
+            IPWMController<ValueT>* pwmController,
+            unitsnet_cpp::ElectricPotential maxVoltage)
         {
             pwmController_ = pwmController;
             maxVoltage_ = maxVoltage;
             maxDAValue_ = pwmController_->GetMaxPWMValue();
-            voltagePerBit_ = maxVoltage_ / maxDAValue_;
         }
 
         bool WriteDAC(uint8_t channel, ValueT value) override;
         ValueT GetMaxDAValue() override;
         uint8_t GetMaxChannels() override;
-        bool WriteDACVoltage(uint8_t channel, float value) override;
-        IDACChannel<unsigned short>* CreateChannelObject(uint8_t channel) override;
+        bool WriteDACVoltage(
+            uint8_t channel,
+            unitsnet_cpp::ElectricPotential value) override;
+        IDACChannel<ValueT>* CreateChannelObject(uint8_t channel) override;
     };
 }

@@ -4,8 +4,7 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
+#include <Temperature.hpp>
 
 namespace LowLevelEmbedded
 {
@@ -13,6 +12,6 @@ namespace LowLevelEmbedded
     {
     public:
         virtual ~ITemperatureSensor() = default;
-        virtual float GetTemperature() = 0;
+        virtual unitsnet_cpp::Temperature GetTemperature() = 0;
     };
 }

@@ -20,15 +20,17 @@ namespace LowLevelEmbedded::Devices::DACs
     private:
         II2CAccess* _I2CAccess;
         uint8_t _SlaveAddress;
-        float _ReferenceVoltage;
-        float _VoltagePerBit;
+        unitsnet_cpp::ElectricPotential _ReferenceVoltage;
 
     public:
         /// The constructor of the DAC
 				/// \param i2cAccess a Pointer to a II2CAccess implementation
 				/// \param slaveAddres the 7 bit slave address of the device
 				/// \param referenceVoltage the reference voltage the DAC uses
-        DAC7578(II2CAccess* i2cAccess, uint8_t slaveAddres, float referenceVoltage);
+        DAC7578(
+            II2CAccess* i2cAccess,
+            uint8_t slaveAddres,
+            unitsnet_cpp::ElectricPotential referenceVoltage);
 
         /// The method will write data to a DAC channel and update the output
 				/// \param channel a value between 0 and 7 to indicate the DAC channel
@@ -64,7 +66,9 @@ namespace LowLevelEmbedded::Devices::DACs
          * @param value The voltage value to write, as a float, within the supported range of the DAC.
          * @return True if the operation was successful, false otherwise.
          */
-        bool WriteDACVoltage(uint8_t channel, float value) override;
+        bool WriteDACVoltage(
+            uint8_t channel,
+            unitsnet_cpp::ElectricPotential value) override;
         /**
          * @brief Creates a channel object for the specified DAC channel.
          *

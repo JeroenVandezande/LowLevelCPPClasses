@@ -7,7 +7,9 @@
 #include "LLE_I2C.h"
 #include "LLE_Temp.h"
 #include "LLE_Pressure.h"
+#include <Length.hpp>
 #include <Pressure.hpp>
+#include <Temperature.hpp>
 
 #include <cstdint>
 
@@ -71,12 +73,12 @@ namespace LowLevelEmbedded::Devices::Sensors
         bool ReadPressure(unitsnet_cpp::Pressure& pressure);
         /// Take a one-shot measurement and return altitude in meters (m), referenced
         /// to the configured sea-level pressure (default 101326 Pa).
-        bool ReadAltitude(float& altitudeM);
+        bool ReadAltitude(unitsnet_cpp::Length& altitude);
         /// Take a one-shot measurement and return temperature in degrees Celsius.
-        bool ReadTemperature(float& temperatureC);
+        bool ReadTemperature(unitsnet_cpp::Temperature& temperature);
 
-        /// ITemperatureSensor: convenience wrapper, returns 0.0f on failure.
-        float GetTemperature() override;
+        /// ITemperatureSensor: convenience wrapper, returns 0 °C on failure.
+        unitsnet_cpp::Temperature GetTemperature() override;
         /// IPressureSensor: convenience wrapper, returns 0.0f on failure.
         unitsnet_cpp::Pressure GetPressure() override;
     };

@@ -1,5 +1,13 @@
 #pragma once
 #include <cstdint>
+#include <Duration.hpp>
+#include <ElectricCharge.hpp>
+#include <ElectricCurrent.hpp>
+#include <ElectricPotential.hpp>
+#include <ElectricResistance.hpp>
+#include <Energy.hpp>
+#include <Power.hpp>
+#include <Temperature.hpp>
 #include "LLE_I2C.h"
 
 
@@ -8,9 +16,11 @@ namespace LowLevelEmbedded::Devices::Monitoring
     struct INA228_Config
     {
         // Configuration (Table 7-5 in Datasheet)
-        float ExpectedCurrent;
+        unitsnet_cpp::ElectricCurrent ExpectedCurrent =
+            unitsnet_cpp::ElectricCurrent::from_amperes(0.0f);
         bool AdcRange;
-        uint8_t ConversionDelay; // Steps of 2ms each (0-510ms)
+        unitsnet_cpp::Duration ConversionDelay =
+            unitsnet_cpp::Duration::from_milliseconds(0.0f);
         bool UseTemperatureCompensation;
         uint16_t TemperatureCompensationPPM;
 
@@ -55,8 +65,9 @@ namespace LowLevelEmbedded::Devices::Monitoring
     private:
         II2CAccess* _i2CAccess;
         uint8_t _slaveAddress;
-        float _senseResistance;
-        float _currentLSB;
+        unitsnet_cpp::ElectricResistance _senseResistance;
+        unitsnet_cpp::ElectricCurrent _currentLSB =
+            unitsnet_cpp::ElectricCurrent::from_amperes(0.0f);
         uint8_t _registerPointer = 0xFF;
         INA228_Config _config;
 
@@ -67,7 +78,7 @@ namespace LowLevelEmbedded::Devices::Monitoring
         bool write40bitWord(uint8_t reg, uint64_t value);
         bool read40bitWord(uint8_t reg, uint64_t& value);
         void setRegisterPointerOnRead(uint8_t reg);
-        bool calibrate(float maxCurrentExpected);
+        bool calibrate(unitsnet_cpp::ElectricCurrent maxCurrentExpected);
 
         // INA228 Register Addresses
         enum Registers : uint8_t {
@@ -106,11 +117,14 @@ namespace LowLevelEmbedded::Devices::Monitoring
          * @param slaveAddress The 7-bit I2C address of the INA228 device.
          * @param senseResistance The value of the sense resistor in ohms, used for calculations.
          */
-        INA228(II2CAccess* i2cAccess, const uint8_t slaveAddress, const float senseResistance)
+        INA228(
+            II2CAccess* i2cAccess,
+            const uint8_t slaveAddress,
+            unitsnet_cpp::ElectricResistance senseResistance)
+            : _i2CAccess(i2cAccess),
+              _slaveAddress(slaveAddress),
+              _senseResistance(senseResistance)
         {
-            _i2CAccess = i2cAccess;
-            _slaveAddress = slaveAddress;
-            _senseResistance = senseResistance;
         }
 
         /**
@@ -134,49 +148,49 @@ namespace LowLevelEmbedded::Devices::Monitoring
          *
          * @return The shunt voltage in volts. If reading fails, returns 0.
          */
-        float ReadShuntVoltage();
+        unitsnet_cpp::ElectricPotential ReadShuntVoltage();
 
         /**
          * @brief Reads the bus voltage.
          *
          * @return The bus voltage in volts. If reading fails, returns 0.
          */
-        float ReadBusVoltage();
+        unitsnet_cpp::ElectricPotential ReadBusVoltage();
 
         /**
          * @brief Reads the die temperature of the INA228.
          *
          * @return The temperature in degrees Celsius. If reading fails, returns 0.
          */
-        float ReadTemperature();
+        unitsnet_cpp::Temperature ReadTemperature();
 
         /**
          * @brief Reads the current flowing through the sense resistor.
          *
          * @return The current in amperes. If reading fails, returns 0.
          */
-        float ReadCurrent();
+        unitsnet_cpp::ElectricCurrent ReadCurrent();
 
         /**
          * @brief Reads the power consumption.
          *
          * @return The power in watts. If reading fails, returns 0.
          */
-        float ReadPower();
+        unitsnet_cpp::Power ReadPower();
 
         /**
          * @brief Reads the accumulated energy.
          *
          * @return The energy in joules. If reading fails, returns 0.
          */
-        float ReadEnergy();
+        unitsnet_cpp::Energy ReadEnergy();
 
         /**
          * @brief Reads the accumulated charge.
          *
          * @return The charge in coulombs. If reading fails, returns 0.
          */
-        float ReadCharge();
+        unitsnet_cpp::ElectricCharge ReadCharge();
 
         /**
          * @brief Sets the shunt voltage over-limit threshold.
@@ -184,7 +198,7 @@ namespace LowLevelEmbedded::Devices::Monitoring
          * @param limitInVolts The voltage limit in volts.
          * @return True if the limit is successfully set, false otherwise.
          */
-        bool SetShuntVoltageOverLimit(float limitInVolts);
+        bool SetShuntVoltageOverLimit(unitsnet_cpp::ElectricPotential limit);
 
         /**
          * @brief Sets the shunt voltage under-limit threshold.
@@ -192,7 +206,7 @@ namespace LowLevelEmbedded::Devices::Monitoring
          * @param limitInVolts The voltage limit in volts.
          * @return True if the limit is successfully set, false otherwise.
          */
-        bool SetShuntVoltageUnderLimit(float limitInVolts);
+        bool SetShuntVoltageUnderLimit(unitsnet_cpp::ElectricPotential limit);
 
         /**
          * @brief Sets the bus voltage over-limit threshold.
@@ -200,7 +214,7 @@ namespace LowLevelEmbedded::Devices::Monitoring
          * @param limitInVolts The voltage limit in volts.
          * @return True if the limit is successfully set, false otherwise.
          */
-        bool SetBusVoltageOverLimit(float limitInVolts);
+        bool SetBusVoltageOverLimit(unitsnet_cpp::ElectricPotential limit);
 
         /**
          * @brief Sets the bus voltage under-limit threshold.
@@ -208,7 +222,7 @@ namespace LowLevelEmbedded::Devices::Monitoring
          * @param limitInVolts The voltage limit in volts.
          * @return True if the limit is successfully set, false otherwise.
          */
-        bool SetBusVoltageUnderLimit(float limitInVolts);
+        bool SetBusVoltageUnderLimit(unitsnet_cpp::ElectricPotential limit);
 
         /**
          * @brief Sets the temperature over-limit threshold for the INA228 device.
@@ -220,7 +234,7 @@ namespace LowLevelEmbedded::Devices::Monitoring
          * temperature exceeds this value, the configured response is triggered.
          * @return True if the temperature limit is successfully set, false otherwise.
          */
-        bool SetTemperatureOverLimit(float limitInCelsius);
+        bool SetTemperatureOverLimit(unitsnet_cpp::Temperature limit);
 
         /**
          * @brief Sets the power over-limit threshold for the INA228 device.
@@ -232,7 +246,7 @@ namespace LowLevelEmbedded::Devices::Monitoring
          * this value, the configured response is triggered.
          * @return True if the limit is successfully set, false otherwise.
          */
-        bool SetPowerOverLimit(float limitInWatts);
+        bool SetPowerOverLimit(unitsnet_cpp::Power limit);
 
         /**
          * @brief Resets the energy and charge accumulators.

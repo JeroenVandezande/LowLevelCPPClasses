@@ -148,7 +148,7 @@ namespace LowLevelEmbedded
             /// @param[out] altitudeM Altitude in meters on success.
             /// @return true on success, false on I2C error or measurement timeout.
             ///
-            bool MPL3115A2::ReadAltitude(float& altitudeM)
+            bool MPL3115A2::ReadAltitude(unitsnet_cpp::Length& altitude)
             {
                 uint8_t data[5];
                 if (!MeasureOnce(true, data)) return false;
@@ -157,7 +157,8 @@ namespace LowLevelEmbedded
                       (static_cast<uint32_t>(data[0]) << 24)
                     | (static_cast<uint32_t>(data[1]) << 16)
                     | (static_cast<uint32_t>(data[2]) << 8));
-                altitudeM = static_cast<float>(raw) / 65536.0f;
+                altitude = unitsnet_cpp::Length::from_meters(
+                    static_cast<float>(raw) / 65536.0f);
                 return true;
             }
 
@@ -171,22 +172,26 @@ namespace LowLevelEmbedded
             /// @param[out] temperatureC Temperature in degrees Celsius on success.
             /// @return true on success, false on I2C error or measurement timeout.
             ///
-            bool MPL3115A2::ReadTemperature(float& temperatureC)
+            bool MPL3115A2::ReadTemperature(
+                unitsnet_cpp::Temperature& temperature)
             {
                 uint8_t data[5];
                 if (!MeasureOnce(false, data)) return false;
 
                 int16_t raw = static_cast<int16_t>(
                     (static_cast<uint16_t>(data[3]) << 8) | data[4]);
-                temperatureC = static_cast<float>(raw) / 256.0f;
+                temperature =
+                    unitsnet_cpp::Temperature::from_degrees_celsius(
+                        static_cast<float>(raw) / 256.0f);
                 return true;
             }
 
-            float MPL3115A2::GetTemperature()
+            unitsnet_cpp::Temperature MPL3115A2::GetTemperature()
             {
-                float temperatureC = 0.0f;
-                ReadTemperature(temperatureC);
-                return temperatureC;
+                auto temperature =
+                    unitsnet_cpp::Temperature::from_degrees_celsius(0.0f);
+                ReadTemperature(temperature);
+                return temperature;
             }
 
             unitsnet_cpp::Pressure MPL3115A2::GetPressure()

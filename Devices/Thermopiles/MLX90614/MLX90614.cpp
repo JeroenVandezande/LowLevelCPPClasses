@@ -26,39 +26,44 @@ namespace LowLevelEmbedded {
         return true;
       }
 
-      float MLX90614::ConvertToCelsius(uint16_t raw) {
-        return (static_cast<float>(raw) * 0.02f) - 273.15f;
+      unitsnet_cpp::Temperature MLX90614::ConvertToTemperature(uint16_t raw) {
+        return unitsnet_cpp::Temperature::from_degrees_celsius(
+          (static_cast<float>(raw) * 0.02f) - 273.15f);
       }
 
-      bool MLX90614::ReadTemperature(RamRegister reg, float& temperatureC) {
+      bool MLX90614::ReadTemperature(
+        RamRegister reg,
+        unitsnet_cpp::Temperature& temperature) {
         uint16_t raw;
         if (!ReadWord(static_cast<uint8_t>(reg), raw)) return false;
-        temperatureC = ConvertToCelsius(raw);
+        temperature = ConvertToTemperature(raw);
         return true;
       }
 
-      bool MLX90614::ReadAmbient(float& temperatureC) {
-        return ReadTemperature(RamRegister::Ta, temperatureC);
+      bool MLX90614::ReadAmbient(unitsnet_cpp::Temperature& temperature) {
+        return ReadTemperature(RamRegister::Ta, temperature);
       }
 
-      bool MLX90614::ReadObject(float& temperatureC) {
-        return ReadTemperature(RamRegister::Tobj1, temperatureC);
+      bool MLX90614::ReadObject(unitsnet_cpp::Temperature& temperature) {
+        return ReadTemperature(RamRegister::Tobj1, temperature);
       }
 
-      bool MLX90614::SetEmissivity(float emissivity) {
-        if (emissivity < 0.1f || emissivity > 1.0f) return false;
+      bool MLX90614::SetEmissivity(unitsnet_cpp::Ratio emissivity) {
+        const auto value = emissivity.decimal_fractions();
+        if (value < 0.1f || value > 1.0f) return false;
         // Calculate register value
-        uint16_t regVal = static_cast<uint16_t>(std::round(65535.0f * emissivity));
+        uint16_t regVal = static_cast<uint16_t>(std::round(65535.0f * value));
         // Erase (write 0) first
         if (!WriteWord(0x04, 0x0000)) return false;
         // Then write the new emissivity
         return WriteWord(0x04, regVal);
       }
 
-      bool MLX90614::GetEmissivity(float &emissivity) {
+      bool MLX90614::GetEmissivity(unitsnet_cpp::Ratio& emissivity) {
         uint16_t regVal;
         if (!ReadWord(0x04, regVal)) return false;
-        emissivity = static_cast<float>(regVal) / 65535.0f;
+        emissivity = unitsnet_cpp::Ratio::from_decimal_fractions(
+          static_cast<float>(regVal) / 65535.0f);
         return true;
       }
 

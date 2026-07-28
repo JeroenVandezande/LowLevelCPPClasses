@@ -10,6 +10,8 @@
 #include <cstdint>
 
 #include "LLE_Humidity.h"
+#include <RelativeHumidity.hpp>
+#include <Temperature.hpp>
 
 namespace LowLevelEmbedded::Devices::Sensors
 {
@@ -38,10 +40,16 @@ namespace LowLevelEmbedded::Devices::Sensors
         static constexpr uint8_t DEFAULT_I2C_ADDRESS = 0x88;
         SHT4x(II2CAccess* i2c, uint8_t address = DEFAULT_I2C_ADDRESS);
         void Reset();
-        bool ReadTemperatureAndHumidity(float& temperatureC, float& humidity, SHT4x_Precision precision = HIGH);
-        bool ActivateHeater(float& temperatureC, float& humidity, SHT4x_HeaterPreset preset);
-        float GetTemperature() override;
-        float GetHumidity() override;
+        bool ReadTemperatureAndHumidity(
+            unitsnet_cpp::Temperature& temperature,
+            unitsnet_cpp::RelativeHumidity& humidity,
+            SHT4x_Precision precision = HIGH);
+        bool ActivateHeater(
+            unitsnet_cpp::Temperature& temperature,
+            unitsnet_cpp::RelativeHumidity& humidity,
+            SHT4x_HeaterPreset preset);
+        unitsnet_cpp::Temperature GetTemperature() override;
+        unitsnet_cpp::RelativeHumidity GetHumidity() override;
         uint32_t GetSerialNumber();
     };
 }

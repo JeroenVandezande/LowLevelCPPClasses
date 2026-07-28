@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <RelativeHumidity.hpp>
+
 namespace LowLevelEmbedded
 {
     /**
@@ -24,10 +26,9 @@ namespace LowLevelEmbedded
          * method should provide real-time or near real-time data for the current environmental
          * conditions.
          *
-         * @return A float representing the relative humidity in percentage (0.0 to 1.0).
+         * @return The relative humidity measurement.
          */
-        virtual float GetHumidity() = 0;
+        virtual unitsnet_cpp::RelativeHumidity GetHumidity() = 0;
     };
 }
-
 
