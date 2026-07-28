@@ -27,8 +27,8 @@ namespace LowLevelEmbedded {
       }
 
       unitsnet_cpp::Temperature MLX90614::ConvertToTemperature(uint16_t raw) {
-        return unitsnet_cpp::Temperature::from_degrees_celsius(
-          (static_cast<float>(raw) * 0.02f) - 273.15f);
+        return unitsnet_cpp::Temperature::from_kelvins(
+          static_cast<float>(raw) * 0.02f);
       }
 
       bool MLX90614::ReadTemperature(
