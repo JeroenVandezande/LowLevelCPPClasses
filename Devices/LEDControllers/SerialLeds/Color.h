@@ -14,9 +14,13 @@ namespace LowLevelEmbedded::Devices::LedControllers::SerialLeds
         uint8_t b = 0;
         uint8_t w = 0; // Optional, only used for RGBW/GRBW
 
-        Color() = default;
+        constexpr Color() noexcept = default;
 
-        Color(uint8_t red, uint8_t green, uint8_t blue, uint8_t white = 0)
+        constexpr Color(
+            uint8_t red,
+            uint8_t green,
+            uint8_t blue,
+            uint8_t white = 0) noexcept
             : r(red), g(green), b(blue), w(white) {}
     };
 }
