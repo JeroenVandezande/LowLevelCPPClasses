@@ -142,6 +142,8 @@ The following drivers are currently present under `Devices`:
 | Category | Driver | Interface | Purpose |
 |---|---|---|---|
 | ADC | AD7175 | SPI | Precision analog-to-digital converter, including its GPIO pins |
+| ADC | [DDC114](Devices/ADCs/DDC114.md) | SPI + GPIO | Four-channel charge ADC with external CLK/CONV, 16/20-bit readout |
+| Clock divider | [CD74HC4059](Devices/ClockDividers/CD74HC4059.md) | GPIO | Programmable divide-by-N counter with master-preset sequencing |
 | DAC | DAC7578 | I2C | Multi-channel digital-to-analog converter |
 | DAC | PWM_DAC | PWM | Adapts a PWM channel to the generic DAC interface |
 | Display | SSD1306 | I2C or SPI | Monochrome OLED display and bundled font data |
