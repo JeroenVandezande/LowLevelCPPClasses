@@ -158,6 +158,7 @@ The following drivers are currently present under `Devices`:
 | Parallel I/O | MCP23S08 | SPI | Eight-bit GPIO expander |
 | Parallel I/O | PCA6408 | I2C | Eight-bit GPIO expander |
 | Power | MPQ4262 | I2C | Configurable power-converter controller |
+| Sensor | [MCP9801](Devices/Sensors/MCP9801/MCP9801.md) | I2C | High-accuracy temperature sensor with programmable ALERT limits |
 | Sensor | MPL3115A2 | I2C | Pressure and temperature sensor |
 | Sensor | SHT4x | I2C | Humidity and temperature sensor |
 | Thermopile | MLX90614 | I2C | Contactless infrared temperature sensor |
