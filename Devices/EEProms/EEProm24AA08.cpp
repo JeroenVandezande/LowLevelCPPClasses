@@ -49,7 +49,7 @@ namespace LowLevelEmbedded::Devices::EEProm
     }
 
 
-    void EEProm24AA08::WriteBytes(uint16_t address, uint8_t *data, size_t length)
+    bool EEProm24AA08::WriteBytes(uint16_t address, uint8_t *data, size_t length)
     {
         // Clear Write buffers
         initWriteBuffers();
@@ -63,10 +63,18 @@ namespace LowLevelEmbedded::Devices::EEProm
             uint8_t i2cAddress = block->BlockWriteAddress;
             for (auto page: block->PageWriteBuffers)
             {
-                i2cAccess->I2C_WriteMethod(i2cAddress, page.data(), page.size());
-                while (!ackPolling(block->BlockNumber));
+                if (!i2cAccess->I2C_WriteMethod(i2cAddress, page.data(), page.size()))
+                {
+                    return false;
+                }
+                // Wait for the write cycle; give up if the chip never acknowledges
+                if (!ackPolling(block->BlockNumber))
+                {
+                    return false;
+                }
             }
         }
+        return true;
     }
 
     void EEProm24AA08::ReadBytes(uint16_t address, uint8_t*& data, size_t length)

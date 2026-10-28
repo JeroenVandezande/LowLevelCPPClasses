@@ -53,6 +53,7 @@ namespace LowLevelEmbedded::Devices::EEProm
         {
             StartingDataAddress = 0;
             Data.clear();
+            PageWriteBuffers.clear();
         }
         uint8_t StartingDataAddress;
         std::vector<uint8_t> Data;
@@ -168,8 +169,10 @@ namespace LowLevelEmbedded::Devices::EEProm
         /**
          * @brief Writes a byte array to the EEProm Chip. Maximum Address 1023.
          *
+         * @returns false if a page write was not acknowledged or the write cycle did not complete
+         *
          */
-        void WriteBytes(uint16_t address, uint8_t* data, size_t length);
+        bool WriteBytes(uint16_t address, uint8_t* data, size_t length);
         /**
          * @brief Reads a byte array to the EEProm Chip. Maximum Address 1023.
          *
